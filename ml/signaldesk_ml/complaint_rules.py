@@ -10,9 +10,14 @@ from enum import StrEnum
 from typing import Literal
 
 TAXONOMY_VERSION = "complaints-v1"
-RULE_VERSION = "complaint-rules-v1"
+RULE_VERSION = "complaint-rules-v2"
 SuppressionReason = Literal[
-    "negated", "hypothetical", "unrelated_old_product", "non_delivery_object", "packaging_only"
+    "negated",
+    "hypothetical",
+    "unrelated_old_product",
+    "non_delivery_object",
+    "packaging_only",
+    "cosmetic_only",
 ]
 
 
@@ -96,10 +101,40 @@ RULES = (
         "?:is )?leak(?:s|ing)|water leak(?:ed|s|ing))\\b",
     ),
     _rule(
+        "defect.component",
+        ComplaintCategory.PRODUCT_DEFECT,
+        r"\b(?P<issue>faulty|non[- ]functional|non[- ]working|inoperative)\b"
+        r"(?!\s+(?:design|fit|compatibility|appearance|description|listing|advertising|"
+        r"box|package|packaging)\b)",
+    ),
+    _rule(
+        "defect.function_specific",
+        ComplaintCategory.PRODUCT_DEFECT,
+        r"\b(?P<issue>(?:(?:does not|doesn['’]t|do not|don['’]t|did not|didn['’]t|"
+        r"will not|won['’]t|would not|wouldn['’]t|cannot|can['’]t)\s+filter|"
+        r"(?:water|liquid)\s+(?:does not|doesn['’]t|did not|didn['’]t|will not|"
+        r"won['’]t|would not|wouldn['’]t|cannot|can['’]t)\s+(?:flow|pass through)))\b",
+        True,
+    ),
+    _rule(
+        "defect.coating",
+        ComplaintCategory.PRODUCT_DEFECT,
+        r"\b(?:paint|coating|enamel|lining|liner|seal)\b[^.!?;\n]{0,65}\b"
+        r"(?P<issue>(?:chips?|chipped|chipping|peels?|peeled|peeling|flakes?|flaked|flaking)"
+        r"\s+off|(?:is|was|has been|started|began)\s+(?:chipping|peeling|flaking))\b",
+    ),
+    _rule(
         "arrival.condition",
         ComplaintCategory.ARRIVAL_DAMAGE,
         r"\b(?:arrived|came|received|delivered|got)\b[^.!?;\n]{0,55}\b"
-        r"(?P<issue>damage(?:d)?|dent(?:ed)?|crack(?:ed)?|crushed|broken|bent)\b",
+        r"(?P<issue>damage(?:d)?|dent(?:ed)?|crack(?:ed)?|crushed|broken|bent|scuffed|scratched)\b",
+    ),
+    _rule(
+        "arrival.unboxing",
+        ComplaintCategory.ARRIVAL_DAMAGE,
+        r"\b(?P<issue>scuffed|scratched|damaged|dented|cracked|broken|bent)\s+"
+        r"(?:(?:on|upon|at)\s+(?:(?:first|initial)\s+)?"
+        r"(?:opening|unboxing|arrival|delivery|receipt)|out of (?:the )?box)\b",
     ),
     _rule(
         "arrival.packaging",
@@ -185,6 +220,17 @@ def _suppression(text: str, match: re.Match[str], rule: Rule) -> SuppressionReas
         return "negated"
     if re.search(r"\b(?:if|might|may|afraid|worried|hope|concerned)\b[^,]{0,45}$", before, re.I):
         return "hypothetical"
+    if rule.identifier == "defect.coating":
+        if re.search(r"\b(?:will|would|could|should)\b[^,]{0,25}$", before, re.I):
+            return "hypothetical"
+        # Coating loss needs an interior/use context, rather than cosmetic dislike.
+        after = re.split(r"[.!?;\n]", text[match.end() : match.end() + 80])[0]
+        if not re.search(
+            r"\b(?:inside|interior|wet|water|ice|food|coffee|use|uses|used|using|wash|washing)\b",
+            before + match.group("issue") + after,
+            re.I,
+        ):
+            return "cosmetic_only"
     if rule.category == ComplaintCategory.PRODUCT_DEFECT and re.search(
         "\\b(?:old|previous|original)\\b.{0,40}$|\\b(?:to replace|repl"
         "acing|replacement for)\\b.{0,50}$",

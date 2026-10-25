@@ -157,7 +157,7 @@ file; batch results are not added to historical product analytics.
 | Frontend | React, strict TypeScript and Tailwind, with shared evidence components and a typed API client. |
 | Backend | One FastAPI application with validated settings, Pydantic contracts and sanitised errors. |
 | Sentiment inference | Lazily loaded saved weighted DistilBERT on CUDA, with automatic saved balanced-LR CPU fallback. |
-| Complaint detection | Frozen explicit rules evaluated independently of sentiment, returning exact source spans and per-category states. |
+| Complaint detection | Versioned explicit rules evaluated independently of sentiment, returning exact source spans and per-category states. |
 | Historical intelligence | Polars-backed aggregation of permitted records into a cached snapshot, with provenance, denominators and transparent priority rules. |
 
 The API uses `/api/v1` for health, summary, product, timeline, investigation and review
@@ -232,6 +232,11 @@ human ground truth. The test partition remains sealed, and evaluation is closed.
 
 ### Complaint detection and explainability
 
+The runtime detector, `complaint-rules-v2`, covers explicit component/filtering/water-flow
+failures, coating loss with interior or use context, and receipt/unboxing damage.
+Coverage remains conservative and is not independently validated. Frozen offline
+complaint comparisons refer to v1 and do not establish performance for v2.
+
 The five categories are **product defect, arrival damage, wrong item, delivery issue,
 and service/returns**. Runtime rules return exact matched passages, half-open Unicode
 code-point offsets, rule provenance and reported-resolution context where available.
@@ -299,9 +304,10 @@ redistribution requires appropriate permission. Dependencies and separately obta
 pretrained artifacts retain their upstream licences and notices.
 
 Historical intelligence covers **22,838 reviews across 80 selected products**, ending
-**11 September 2023**, with **37 investigation candidates across 26 products**.
+**11 September 2023**, with **38 investigation candidates across 26 products**.
 Negative-rating burden is a rating proxy, and complaint shares use scanned bodies as
-their denominator. Category overlaps do not inflate unique-review totals. Priorities
+their denominator. Version 2 rules match 1,491 of 20,282 scanned reviews; category
+overlaps do not inflate that unique-review total. Priorities
 use documented minimum-support and temporal rules, with quarterly comparisons when
 monthly observations are sparse. These are customer-reported historical patterns,
 not verified incidents or a continuously refreshed Amazon feed.
