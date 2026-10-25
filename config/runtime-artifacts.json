@@ -1,0 +1,78 @@
+{
+  "format_version": 1,
+  "description": "Frozen runtime files; checksums identify bytes, not redistribution permission. Historical records and reservation metadata are not distributed.",
+  "files": [
+    {
+      "path": "data/processed/appliances-v1/investigation.parquet",
+      "bytes": 5107404,
+      "sha256": "1fcd72dd885b6872ba1d99f3c2089d10243f84179fef696f849ee514da00cc5c",
+      "group": "historical"
+    },
+    {
+      "path": "data/processed/appliances-v1/manifest.json",
+      "bytes": 4160,
+      "sha256": "8cc4fdf25a23dc3cc8f909bd8f5661aebb193d95ccdf70ede75e94ecf14445f1",
+      "group": "historical"
+    },
+    {
+      "path": "data/annotations/sentiment-v1/internal/provenance.json",
+      "bytes": 25605,
+      "sha256": "0a59911b6a5767d66db42066ef7b4f5aeba7b14b54473e9fb9dfd5f91849252a",
+      "group": "historical"
+    },
+    {
+      "path": "data/annotations/sentiment-v1/complaints-v1/internal/provenance.json",
+      "bytes": 15425,
+      "sha256": "e36a62aaa3bd6a84073a54d476f76b1425fea3c1b91392f1b197ee94a745b20d",
+      "group": "historical"
+    },
+    {
+      "path": "artifacts/sentiment/baselines-v1/run.json",
+      "bytes": 26234,
+      "sha256": "07a79d5c282565f5030ecca594334803aaf1706545bcdaf6da262aecab0defc5",
+      "group": "cpu"
+    },
+    {
+      "path": "artifacts/sentiment/baselines-v1/logistic_regression_balanced.joblib",
+      "bytes": 2072265,
+      "sha256": "750f54a6fe6a1dd88ba35e5230d77fb4ea522850e0feb47c2116f9284fd00690",
+      "group": "cpu"
+    },
+    {
+      "path": "artifacts/sentiment/distilbert-weighted-v1/run.json",
+      "bytes": 11584,
+      "sha256": "f6006dfa75cb76b826c8d33b559912c94d2331a2b0c8c7051cd2bac76dca2eba",
+      "group": "cuda"
+    },
+    {
+      "path": "artifacts/sentiment/distilbert-weighted-v1/checkpoint/class_mapping.json",
+      "bytes": 64,
+      "sha256": "3f6dca501362daca684bf49e34369a11346aed1b44b9e393f65d63c1b83a05e9",
+      "group": "cuda"
+    },
+    {
+      "path": "artifacts/sentiment/distilbert-weighted-v1/checkpoint/config.json",
+      "bytes": 787,
+      "sha256": "2cfa6ae0e3c8a0166bda147117cc1ed40579d4e3e6507853fc79196e18b63ddd",
+      "group": "cuda"
+    },
+    {
+      "path": "artifacts/sentiment/distilbert-weighted-v1/checkpoint/model.safetensors",
+      "bytes": 267835644,
+      "sha256": "d6c10bcd9e1aaf77f63db733841af47ae69bf155b06c132246e69792721dcb75",
+      "group": "cuda"
+    },
+    {
+      "path": "artifacts/sentiment/distilbert-weighted-v1/checkpoint/tokenizer.json",
+      "bytes": 711649,
+      "sha256": "851ca67100d372ca3ae031a6abd168f53489eebfd7d89523f35c5c9b4d372c3c",
+      "group": "cuda"
+    },
+    {
+      "path": "artifacts/sentiment/distilbert-weighted-v1/checkpoint/tokenizer_config.json",
+      "bytes": 364,
+      "sha256": "1677901b0243cd63e328732e6bcbf956a83dc6690a97eeed214eea7655fc3286",
+      "group": "cuda"
+    }
+  ]
+}

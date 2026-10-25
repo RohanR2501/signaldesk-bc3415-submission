@@ -30,3 +30,5 @@ htmlcov/
 *.pkl
 *.onnx
 *.zip
+
+/runtime-model-checksums.json
