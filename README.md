@@ -1,160 +1,75 @@
-# SignalDesk — BC3415 Option A
+# SignalDesk — AI-Powered Customer Review Intelligence
 
-Retail customer intelligence from review text, with evidence for human investigation.
+SignalDesk helps retail customer experience teams, e-commerce operations managers and
+analysts turn customer reviews into evidence for investigation. It combines sentiment
+classification, independent complaint detection and historical product analytics in a
+three-view application, helping users prioritise products, inspect customer-reported
+patterns and trace signals back to their supporting reviews. Developed for NTU BC3415 Option A
+(Text Classification).
 
-**This is a source-code submission. Model weights, review datasets, annotations and
-frozen result artifacts are not bundled.** The backend and frontend can start without
-them, but historical views show unavailable data and sentiment analysis is partial.
-Complaint-rule analysis remains available. No mock data or predictions are substituted.
+[Quick Start](#quick-start--installation-and-running) ·
+[Application Features](#application-features) ·
+[Technical Architecture](#technical-architecture) ·
+[Machine Learning Methodology](#machine-learning-methodology) ·
+[Reproducibility and Data](#reproducibility-and-data)
 
-## Product and architecture
+## Quick Start — Installation and Running
 
-Three application views:
+### Prerequisites
 
-1. **Executive Overview:** historical review/rating burden, complaint scan coverage,
-   product search and investigation priorities.
-2. **Live Review Analyzer:** three-class sentiment with actual model identity and
-   CPU fallback, plus five independent complaint categories and exact rule excerpts.
-3. **Product Investigation Workbench:** filtered/paginated candidates, product calendars,
-   temporal comparisons and source-review evidence, including protected-body states.
+Use Windows x64, **Python 3.13**, **Node.js 24** and **uv 0.13.5**. The tested
+environment used Python 3.13.5, Node 24.18.0 and npm 11.16.0. An NVIDIA GPU is optional:
+saved balanced logistic regression provides CPU sentiment inference. No API key,
+Docker installation or database server is required.
 
-One FastAPI application serves a React/TypeScript frontend using Tailwind, Lucide and
-Radix tooltips. Pydantic defines canonical API contracts; exported JSON Schema generates
-frontend types and validates responses. Polars loads permitted historical records into
-one lazy in-memory snapshot. SQLite is reserved, not required. Inference is lazy and
-separate from offline training/evaluation; there are no external paid prediction APIs,
-automatic customer actions or persisted triage decisions. Submitted text is not saved.
+Open PowerShell in the project root. All commands below use that directory.
 
-Implemented API paths under `/api/v1`: `health`, `summary`, `products`,
-`products/{product_id}`, `products/{product_id}/timeline`, `investigations`,
-`investigations/{signal_id}`, `reviews/{review_id}` (GET), and
-`reviews/analyze` (POST). Business payloads use schema 1.1; legacy offline contracts
-and error envelopes retain 1.0. Health is liveness only, not model/data readiness.
-
-### Batch CSV analysis
-
-Inside Live Review Analyzer, choose **Batch CSV Analysis**. Upload a UTF-8 `.csv`
-with a case-sensitive `text` header and optional `review_id`; other columns are
-ignored. Files are limited to **2 MiB and 100 review rows**, with nonblank text of
-at most 50,000 Unicode characters per row. Quoted commas, escaped quotes and multiline
-text are supported. Invalid files are rejected before any analysis; a short preview
-precedes processing. Each input row is counted separately, even if IDs repeat.
-
-Requests use the existing analysis endpoint sequentially. Controls prevent duplicate
-starts; **Cancel remaining** waits for the current response, retains it and stops
-further requests. Leaving the analyzer stops further browser dispatch, but cannot
-guarantee cancellation of an already-running server request. A request failure stops
-the batch without automatic retries. Cold loading can take minutes; actual model,
-device, fallback reason and partial/unavailable states remain visible.
-
-Totals distinguish completed API responses (including partial analyses), failed
-requests and unprocessed rows. Sentiment counts and five independent complaint counts
-use completed responses only. Category counts can overlap. Search/outcome/complaint
-filters affect the results table, not the exported rows. Exact evidence and its
-Unicode offsets use the original uploaded text, independently of sentiment.
-
-**Export CSV** includes every input row, original ID/text, processing state, actual
-predictions, provenance and complaint states/evidence. Spreadsheet-formula-leading
-cells receive an apostrophe; `spreadsheet_sanitized_fields` lists adjusted columns,
-so removing only the added apostrophe recovers the exact original value. JSON columns
-retain model/rule metadata and warnings; no confidence scores are invented.
-
-Uploads/results stay in temporary browser memory, including when switching analyzer
-modes. **Clear batch** or leaving the analyzer discards them. Only an explicit export
-creates a local results file. Nothing enters SQLite, local storage or the historical
-2023 product intelligence. Backend inference, saved models and evaluation are unchanged.
-
-## Data and ML approach
-
-Source: McAuley Lab, [Amazon Reviews 2023](https://amazon-reviews-2023.github.io/),
-Appliances category. Cite Hou et al. (2024), *Bridging Language and Items for Retrieval
-and Recommendation*. [Dataset card](https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023).
-The acquisition URL and bounds are in `config/data-preparation.json`. Original gzip
-SHA256: `150f209befceaa6f837abc997065b2d251034bbbda19bebc4ad56dac779730c2`.
-This submission does not redistribute review bodies, identifiers or annotations;
-do not assume public redistribution permission.
-
-Preprocessing validates bodies, ratings, product IDs and UTC timestamps; preserves
-original text; removes reviewer IDs/images; groups normalised exact and bounded
-SimHash/Jaccard near-duplicate families; and creates chronological, family-aware
-partitions. The sentiment cohort has 46,064 reviews: 32,230 train, 6,913 validation
-and 6,921 sealed test. A 240-review blind reservation is excluded from fitting and
-model-selection scoring. Test data and annotation reservations remain protected.
-
-Only review-body `model_text` is a sentiment feature. Rating labels are disclosed
-proxies: 1–2 negative, 3 neutral, 4–5 positive. Ratings, IDs, timestamps and product
-aggregates are never classifier inputs. TF-IDF is fitted on training text only,
-using word unigrams/bigrams without stop-word removal. Four CPU baselines compare
-majority, Naive Bayes, logistic regression and balanced logistic regression;
-validation Macro-F1 selects the balanced pipeline.
-
-Two bounded DistilBERT experiments compare unweighted cross-entropy against
-training-derived square-root inverse-frequency weighting. Seed, two-epoch schedules,
-resource limits and model-selection settings are retained in configuration/code.
-The weighted model remains the provisional CUDA sentiment component; saved balanced
-logistic regression is the CPU alternative. No training runs during application startup.
-
-Five complaints are independent of sentiment: product defect, arrival damage, wrong
-item, delivery issue, and service/returns. Runtime detection uses frozen explicit rules
-and Unicode code-point evidence offsets. No match is **unknown**, not confirmed absence.
-Positive sentiment and reported resolution do not erase a complaint. Offline NLI and
-weakly supervised student experiments remain included for assessment, but the large
-BART checkpoint is not bundled or launched by the application. Wrong-item students are
-unreliable; the delivery student lacks support and is unavailable. Uncalibrated NLI
-scores are not probabilities.
-
-The original history contains 22,838 unique reviews across 80 selected products, ending
-11 September 2023. Negative-rating burden is a rating proxy; rule shares use scanned
-bodies, with protected/unavailable bodies excluded. The 37 candidates across 26 products
-are historical investigation aids, not confirmed incidents or live alerts. Minimum
-sample denominators and complete-period comparisons govern priorities; quarterly
-aggregation is used when monthly support is sparse. Category overlaps never inflate
-the unique-review total.
-
-## Evaluation
-
-Frozen evaluation compares each model separately against two 150-review LLM references.
-Uncertain/missing cells remain unresolved, with explicit denominators. Twenty independent
-human judgments were deliberately selected for disagreement analysis. Neither LLM
-agreement nor that challenge set estimates population accuracy.
-
-| Sentiment model | LLM reference A: agreement / Macro-F1 | LLM reference B: agreement / Macro-F1 |
-|---|---:|---:|
-| Balanced logistic regression | 116/143 (81.12%) / 0.663 | 117/148 (79.05%) / 0.599 |
-| Unweighted DistilBERT | 115/143 (80.42%) / 0.638 | 117/148 (79.05%) / 0.595 |
-| Weighted DistilBERT | 112/143 (78.32%) / 0.617 | 117/148 (79.05%) / 0.625 |
-
-The references do not identify a stable winner. Neutral support is only six/four
-resolved labels. Complaint evaluation reports per-label support, precision/recall/F1,
-decision coverage and abstentions; rare categories lack sufficient positive support.
-For example, rule defect detection F1 is 0.392/0.345 against A/B, with low coverage.
-No result establishes verified-defect detection or production accuracy.
-
-Metric, confusion-matrix, alignment and evidence-audit implementations are in
-`ml/signaldesk_ml/`. Original per-class results and provenance remain in the private
-research archive, not this source package. Aggregate values above are transcribed from
-the frozen consolidation, not newly evaluated. No thresholds/models were tuned using
-these references. Evaluation and annotation are closed; do not rerun them for setup.
-
-## Install and run (Windows PowerShell)
-
-Verified development environment: Windows x64, Python 3.13.5, Node 24.18.0,
-npm 11.16.0 and uv 0.13.5. Python metadata permits 3.11–3.13; other versions/platforms
-and clean-machine installation have not been verified. Internet is needed to install
-dependencies, not for saved inference. No API key, Docker or database server is needed.
-
-From the extracted/cloned repository root:
+### 1. Install dependencies
 
 ```powershell
 py -3.13 -m venv .tools
 .\.tools\Scripts\python.exe -m pip install uv==0.13.5
+
 $env:UV_CACHE_DIR = Join-Path (Get-Location) '.runtime/uv-cache'
 $env:PYTHONUTF8 = '1'
 .\.tools\Scripts\uv.exe sync --frozen --all-groups --extra data --extra baselines
 npm.cmd --prefix frontend ci
 ```
 
-Terminal 1:
+These commands install from `uv.lock` and `frontend/package-lock.json`.
+
+### 2. Configure the environment and runtime artifacts
+
+Create local configuration files if they do not already exist:
+
+```powershell
+if (-not (Test-Path .env)) {
+    Copy-Item .env.example .env
+}
+if (-not (Test-Path frontend/.env.local)) {
+    Copy-Item frontend/.env.example frontend/.env.local
+}
+```
+
+The defaults connect the frontend to the local backend. Model directories can be changed
+through `SIGNALDESK_BASELINE_DIRECTORY` and `SIGNALDESK_TRANSFORMER_DIRECTORY` in
+`.env`; relative paths resolve from the project root.
+
+For full functionality, place the separately supplied runtime artifacts in:
+
+- `artifacts/sentiment/baselines-v1/` — saved CPU sentiment pipeline and run metadata.
+- `artifacts/sentiment/distilbert-weighted-v1/` — saved transformer checkpoint and run
+  metadata, when using GPU inference.
+- `data/processed/appliances-v1/` — historical investigation records and manifest,
+  accompanied by their matching exclusion metadata under `data/annotations/`.
+
+The source submission does not bundle these artifacts. The application can start
+without them and perform complaint-rule analysis; sentiment and historical views depend
+on the corresponding artifacts. See [the exact file list](#runtime-artifacts) below.
+
+### 3. Start the backend
+
+In terminal 1:
 
 ```powershell
 $env:UV_CACHE_DIR = Join-Path (Get-Location) '.runtime/uv-cache'
@@ -162,126 +77,231 @@ $env:PYTHONUTF8 = '1'
 .\.tools\Scripts\uv.exe run --frozen --extra data --extra baselines uvicorn signaldesk.main:app --host 127.0.0.1 --port 8000 --no-access-log
 ```
 
-Terminal 2:
+### 4. Start the frontend
+
+In terminal 2, from the same project root:
 
 ```powershell
 npm.cmd --prefix frontend run dev
 ```
 
-Open [the app](http://127.0.0.1:5173) or [API docs](http://127.0.0.1:8000/docs).
-Vite proxies `/api` to port 8000; port 5173 is strict. Stop each server with Ctrl+C.
-Optional configuration: copy `.env.example` to `.env`, or `frontend/.env.example`
-to `frontend/.env.local`. Paths resolve from the repository root; `VITE_` values
-are public. Keep access logging disabled to avoid raw URL logging.
+Open **[SignalDesk at http://127.0.0.1:5173](http://127.0.0.1:5173)**.
+Interactive API documentation is available at
+[http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
+Vite proxies `/api` requests to the backend. Stop each service with **Ctrl+C**.
 
-For the saved CUDA model, install and retain the GPU extra in both commands:
+### Optional: enable GPU sentiment inference
+
+With a compatible NVIDIA GPU and the saved transformer artifacts, add the GPU extra
+to installation and backend startup:
 
 ```powershell
 .\.tools\Scripts\uv.exe sync --frozen --all-groups --extra data --extra baselines --extra gpu
 .\.tools\Scripts\uv.exe run --frozen --extra data --extra baselines --extra gpu uvicorn signaldesk.main:app --host 127.0.0.1 --port 8000 --no-access-log
 ```
 
-The verified GPU is an RTX 4070 Laptop GPU (8 GB), with driver 577.02 and the locked
-PyTorch CUDA 12.6 wheel. A separate CUDA Toolkit is not required for that wheel.
-Without CUDA/dependencies/checkpoint, the backend tries saved balanced LR on CPU;
-DistilBERT itself does not run on CPU.
+The tested GPU is an RTX 4070 Laptop GPU with 8 GB VRAM. The locked Windows PyTorch
+wheel includes CUDA 12.6 runtime support; a separate CUDA Toolkit is not required.
+If transformer loading or CUDA inference is unavailable, the backend automatically
+tries the saved balanced-LR CPU pipeline. DistilBERT itself does not run on CPU.
 
-### Runtime artifacts — not included
+### Basic troubleshooting
 
-Obtain the **original compatible artifact set** separately from the project authors
-through a permitted private handoff. There is no public checkpoint download supplied.
-Do not copy protected annotations or raw reviews into GitHub, even into a private
-repository, without verified permission.
+| Symptom | Action |
+|---|---|
+| App cannot reach the backend | Start both terminals and check ports 8000 and 5173. The frontend requires port 5173. |
+| First analysis takes longer | Allow time for local model initialisation; progress is displayed. |
+| Sentiment unavailable or historical data returns 503 | Check the artifact paths and matching metadata, then restart the backend to clear cached load failures. |
+| Health reports connected but analysis is unavailable | Health checks service liveness; data and model readiness are reported by the relevant responses. |
 
-| Capability | Required paths relative to root | Approximate sizes |
-|---|---|---:|
-| Historical intelligence | `data/processed/appliances-v1/investigation.parquet`, `manifest.json` | 4.87 MiB + 4.1 KiB |
-| Mandatory history exclusions | `data/annotations/sentiment-v1/internal/provenance.json`; `data/annotations/sentiment-v1/complaints-v1/internal/provenance.json` | 25.0 + 15.1 KiB |
-| CPU sentiment | `artifacts/sentiment/baselines-v1/run.json`, `logistic_regression_balanced.joblib` | 25.6 KiB + 1.98 MiB |
-| CUDA sentiment | `artifacts/sentiment/distilbert-weighted-v1/run.json`; `checkpoint/class_mapping.json`, `config.json`, `model.safetensors`, `tokenizer.json`, `tokenizer_config.json` under that directory | 11.3 KiB + 256.11 MiB |
+For a frontend production build, use `npm.cmd --prefix frontend run build`, then
+`npm.cmd --prefix frontend run preview` on port 4173 with the backend running.
 
-Historical manifest, investigation checksum and exclusion metadata must agree. Do not
-relax exclusions or edit hashes. Runtime does not read sealed modelling partitions or
-annotation labels. Only load trusted original joblib files. Optional
-`SIGNALDESK_TRANSFORMER_DIRECTORY` and `SIGNALDESK_BASELINE_DIRECTORY` override the
-model directories.
+## Application Features
 
-Research code is retained for inspection/reproduction under separately authorised
-access to source data, exact frozen membership/protocol and original checkpoints:
-`signaldesk-data prepare`, `signaldesk-baselines train`, and
-`python -m signaldesk_ml.transformer_train train --config config/sentiment-transformer-weighted.json`
-are the original entry points (use the appropriate installed extras). Transformer
-initialisation also requires the pinned cache built by `scripts/cache_distilbert.py`;
-weighted training references the original unweighted run. These are **not installation
-steps**. Downloading the source alone does not recreate protected annotation judgments
-or guarantee byte-identical frozen artifacts. Do not retrain, create annotations or run
-the full data verifier against the sealed test partition to get the app running.
+| View | Main capabilities |
+|---|---|
+| **Executive Overview** | Historical review volume, rating-derived negative burden, complaint scan coverage, product search and investigation priorities. |
+| **Live Review Analyzer** | On-demand single-review and batch CSV sentiment inference, five complaint categories, exact evidence, model provenance and CSV export. |
+| **Product Investigation Workbench** | Product and candidate filters, paginated investigation queues, historical calendars, supported period comparisons and source-review exploration. |
 
-### Missing artifacts and troubleshooting
+A typical workflow starts with the overview to identify a product worth investigating,
+continues in the workbench to compare periods and inspect supporting reviews, and uses
+the analyzer to examine additional review text. Candidate signals support human
+investigation; they do not verify product defects.
 
-- Historical endpoints return 503 for absent/incompatible data. The UI reports this;
-  health can still return 200 with `model_status=not_checked`.
-- If both saved sentiment models fail, analysis returns partial/unavailable sentiment
-  and independent rules. No fake sentiment label is supplied.
-- Models and load failures are cached until restart. First load can be slow; an actual
-  CPU cold request took about 54 seconds locally. Inspect the returned fallback reason.
-- Connection failure: check both services, ports 8000/5173 and the Vite proxy. Separate
-  hosting needs `VITE_API_BASE_URL` and the exact CORS origin configured on the backend.
-- Production frontend: `npm.cmd --prefix frontend run build`; preview with
-  `npm.cmd --prefix frontend run preview` on port 4173, with the backend running.
+### Single-review and batch analysis
 
-## Code map and verification
+Single-review mode accepts original text and displays positive, neutral or negative
+sentiment alongside independent complaint results. Batch mode accepts a UTF-8 CSV with
+a required `text` column and optional `review_id`. It supports quoted commas,
+escaped quotes and multiline text, with limits of **100 reviews, 2 MiB per file and
+50,000 Unicode characters per review**. A preview appears before processing.
+
+Batch requests run sequentially through the same inference endpoint. Progress separates
+processed, failed and unprocessed rows; cancellation stops remaining work after the
+current request finishes. Results include sentiment counts, complaint counts and a
+filterable review table with original text, evidence and actual model identity.
+Request failures stop further dispatch without automatic retries.
+
+CSV export includes all input rows and their processing states, regardless of filters.
+Formula-leading cells are prefixed with an apostrophe; `spreadsheet_sanitized_fields`
+identifies those reversible adjustments. Uploaded text and results stay in temporary
+browser memory until cleared or the analyzer is left. An explicit export saves a local
+file; batch results are not added to historical product analytics.
+
+## Technical Architecture
+
+| Component | Implementation |
+|---|---|
+| Frontend | React, strict TypeScript and Tailwind, with shared evidence components and a typed API client. |
+| Backend | One FastAPI application with validated settings, Pydantic contracts and sanitised errors. |
+| Sentiment inference | Lazily loaded saved weighted DistilBERT on CUDA, with automatic saved balanced-LR CPU fallback. |
+| Complaint detection | Frozen explicit rules evaluated independently of sentiment, returning exact source spans and per-category states. |
+| Historical intelligence | Polars-backed aggregation of permitted records into a cached snapshot, with provenance, denominators and transparent priority rules. |
+
+The API uses `/api/v1` for health, summary, product, timeline, investigation and review
+resources. Single and batch analysis both call `POST /api/v1/reviews/analyze`.
+Canonical contracts are defined in
+[contracts.py](backend/src/signaldesk/contracts.py), with exported schemas in
+[docs/contracts/schema-v1.json](docs/contracts/schema-v1.json).
+Training and evaluation stay offline; API requests do not execute training workflows.
 
 ```text
-backend/src/signaldesk/   App, contracts, lazy inference, protected history and priorities
-frontend/src/            Three views, typed client, evidence and calendar components
-ml/signaldesk_data/      Acquisition, validation, duplicate families and frozen partitions
-ml/signaldesk_ml/        Training, selection, inference, metrics and frozen evaluation
-config/                 Original data/model/evaluation parameters
-scripts/                Contract export, GPU diagnostic and pinned pretrained caches
-docs/contracts/         Required canonical schema, imported by the frontend
-docs/COMPLAINT_TAXONOMY.md  Immutable, checksum-referenced research specification
-tests/                  Small API/configuration/contract behavior tests
-frontend/tests/         Focused CSV, cancellation and export behavior tests
+backend/src/signaldesk/   API, inference orchestration and historical intelligence
+frontend/src/            Three application views, typed client and shared components
+frontend/tests/          CSV parsing, processing and export tests
+ml/signaldesk_data/      Acquisition, preprocessing and duplicate-aware partitioning
+ml/signaldesk_ml/        Training, model selection, inference and evaluation
+config/                 Data, model and evaluation configurations
+scripts/                Contract export and pretrained-model setup utilities
+docs/                   Canonical schema and frozen complaint taxonomy
+tests/                  Backend API, configuration and contract tests
 ```
 
-The taxonomy preserves its original historical annotation protocol because offline code
-checks its exact hash; it is not an instruction to start further annotation. Research
-report files/figures are generated outputs and are not included. The submission copy
-redirects one generated-report annotation hyperlink to this README; algorithms and
-application source are unchanged.
+## Machine Learning Methodology
 
-Development verification already passed frontend typecheck/lint/build, 24 scoped backend
-tests, Ruff/mypy and schema-export checks. Real local walkthroughs exercised historical
-navigation/evidence, saved CPU fallback and honest unavailable states; earlier checks
-exercised the saved CUDA model. These results are from the original development
-environment, not a new clean-install or ML evaluation claim. Packaging verification
-checks file completeness, imports/references, privacy and ZIP/Git byte equality only.
+### Data preparation and sentiment labels
 
-Batch extension verification: seven focused Node tests passed, as did frontend
-typecheck, lint and production build. A real browser batch of three synthetic reviews
-used saved balanced-LR CPU fallback: 1 positive, 2 negative, 0 neutral/unavailable;
-rule counts were defect 1, arrival 1, service/returns 2, wrong-item/delivery 0.
-Export round-trip preserved original text/IDs (after the documented formula guard)
-and exact Unicode evidence offsets, including quoted commas and multiline text.
-Cancellation retained 9 completed responses and left 91 of a 100-row input unprocessed.
-With both model paths absent, all three responses were partial/unavailable for
-sentiment while retaining rule evidence. Single-review inference, filtering and
-narrow layout were checked. Normal backend configuration was restored. No new GPU
-inference, training or evaluation was run.
+The project uses the **Amazon Reviews 2023 Appliances** dataset. Preprocessing validates
+review text, ratings, product identifiers and UTC timestamps, removes reviewer IDs and
+images, groups exact and bounded near-duplicate text families, and produces chronological,
+family-aware partitions. Original review bodies remain available for traceable evidence.
 
-Optional lightweight checks, after installation:
+The sentiment cohort contains 46,064 reviews: 32,230 training, 6,913 validation and
+6,921 sealed test records. A 240-review annotation reservation is excluded from fitting
+and model-selection scoring, leaving **6,673 validation reviews** for comparison.
 
-```powershell
-.\.tools\Scripts\uv.exe run --frozen --extra data --extra baselines pytest
-.\.tools\Scripts\uv.exe run --frozen python scripts/export_contracts.py --check
-npm.cmd --prefix frontend run test:batch
-npm.cmd --prefix frontend run typecheck
-npm.cmd --prefix frontend run lint
-npm.cmd --prefix frontend run build
-```
+Training labels are rating-derived proxies: **1–2 stars → negative, 3 → neutral,
+4–5 → positive**. They are not independently human-verified sentiment ground truth.
+Only review-body `model_text` is used as a classifier feature; ratings, titles,
+identifiers, dates and product aggregates are excluded from model inputs.
 
-Third-party dependencies are installed separately; package metadata/lockfiles retain
-their attribution/license metadata. No third-party implementation bundles or model
-weights are copied into this submission. Pinned pretrained model identifiers are in
-configuration; their separately obtained artifacts retain their upstream notices.
+### Models and selection
+
+Four classical baselines compare a majority classifier, TF-IDF with Naive Bayes,
+logistic regression and balanced logistic regression. TF-IDF uses word unigrams/bigrams
+and is fitted on training text only. Validation Macro-F1 selects the balanced-LR
+classical pipeline.
+
+Two two-epoch DistilBERT experiments compare unweighted cross-entropy with
+training-derived square-root inverse-frequency class weighting. Their original
+configurations retain seed 3415, training settings and resource limits. Weighted
+DistilBERT is the provisional GPU sentiment component; balanced LR supplies CPU fallback.
+
+### Evaluation
+
+The following frozen results use the **same 6,673-review rating-proxy validation set**:
+
+| Model | Validation accuracy | Macro-F1 |
+|---|---:|---:|
+| Balanced Logistic Regression | 82.65% | 0.6269 |
+| Unweighted DistilBERT | 89.84% | 0.6669 |
+| Weighted DistilBERT | 87.97% | 0.6756 |
+
+Weighted DistilBERT has the highest observed Macro-F1 in these runs, while the unweighted
+model has higher overall accuracy. These comparisons guide model selection; they do
+not establish statistical superiority or independently verified population accuracy.
+Evaluation code retains per-class support, precision/recall/F1, confusion matrices
+and error analysis.
+
+A separate frozen analysis compared predictions against two 150-review LLM references
+and 20 deliberately selected independent human judgments, preserving uncertainty.
+LLM-reference agreement and a selected challenge set do not replace representative
+human ground truth. The test partition remains sealed, and evaluation is closed.
+
+### Complaint detection and explainability
+
+The five categories are **product defect, arrival damage, wrong item, delivery issue,
+and service/returns**. Runtime rules return exact matched passages, half-open Unicode
+code-point offsets, rule provenance and reported-resolution context where available.
+The [frozen complaint taxonomy](docs/COMPLAINT_TAXONOMY.md) defines category scope and
+is retained unchanged because offline code verifies its checksum.
+
+Sentiment and complaints remain independent: positive sentiment or a reported resolution
+does not erase a complaint. No rule match means **unknown**, rather than confirmed
+absence; abstained and unavailable states remain explicit. Rule excerpts are not
+sentiment-model attribution spans, and uncalibrated scores are not probabilities.
+Offline NLI/student experiments remain assessable in the ML source, but runtime uses
+the rules; unreliable wrong-item and unsupported delivery students are not authoritative
+classifiers.
+
+## Reproducibility and Data
+
+### Runtime artifacts
+
+The source submission includes implementation, configurations, contracts, lockfiles
+and tests. Runtime data and saved model artifacts are supplied separately through an
+approved private handoff from the project authors; no public checkpoint download is
+provided.
+
+| Capability | Files and locations relative to the project root | Approximate size |
+|---|---|---:|
+| Historical intelligence | `data/processed/appliances-v1/investigation.parquet` and `data/processed/appliances-v1/manifest.json` | 4.87 MiB + 4.1 KiB |
+| Required historical exclusions | `data/annotations/sentiment-v1/internal/provenance.json` and `data/annotations/sentiment-v1/complaints-v1/internal/provenance.json` | 40 KiB combined |
+| CPU sentiment | `artifacts/sentiment/baselines-v1/run.json` and `logistic_regression_balanced.joblib` in that directory | About 2 MiB |
+| GPU sentiment | `artifacts/sentiment/distilbert-weighted-v1/run.json` and its `checkpoint/` directory | About 256 MiB |
+
+The transformer checkpoint contains `class_mapping.json`, `config.json`,
+`model.safetensors`, `tokenizer.json` and `tokenizer_config.json`.
+Historical records, manifest and exclusion metadata must belong to the same frozen
+artifact set. Saved loaders verify checksums; load only trusted original joblib files.
+
+Without saved sentiment artifacts, the analyzer returns partial results with unavailable
+sentiment and independent complaint-rule outputs. Without historical artifacts, historical
+views report unavailable data. Health and the application shell remain accessible.
+
+### Research reproduction
+
+The supplied [data configuration](config/data-preparation.json) and
+[ML configurations](config/) record source acquisition, preparation and training parameters.
+Original entry points include `signaldesk-data prepare`,
+`signaldesk-baselines train` and
+`python -m signaldesk_ml.transformer_train train --config config/sentiment-transformer-weighted.json`.
+Transformer training additionally requires the pinned cache prepared by
+`scripts/cache_distilbert.py`; weighted training references the original unweighted run.
+
+These offline workflows require authorised source data, frozen membership/provenance
+and the appropriate dependencies; they are not application startup steps. Downloading
+the source alone does not reproduce private annotation judgments or guarantee identical
+frozen artifacts. Do not reopen annotation/evaluation or run the full data verifier,
+which reads the sealed test partition, as part of setup. Clean-machine installation
+has not been independently verified.
+
+### Attribution and interpretation
+
+Data source: McAuley Lab,
+[Amazon Reviews 2023](https://amazon-reviews-2023.github.io/) —
+[dataset card](https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023).
+Cite Hou et al. (2024), *Bridging Language and Items for Retrieval and Recommendation*.
+Review bodies, identifiers and protected annotations are excluded from the submission;
+redistribution requires appropriate permission. Dependencies and separately obtained
+pretrained artifacts retain their upstream licences and notices.
+
+Historical intelligence covers **22,838 reviews across 80 selected products**, ending
+**11 September 2023**, with **37 investigation candidates across 26 products**.
+Negative-rating burden is a rating proxy, and complaint shares use scanned bodies as
+their denominator. Category overlaps do not inflate unique-review totals. Priorities
+use documented minimum-support and temporal rules, with quarterly comparisons when
+monthly observations are sparse. These are customer-reported historical patterns,
+not verified incidents or a continuously refreshed Amazon feed.
