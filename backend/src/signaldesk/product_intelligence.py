@@ -203,6 +203,11 @@ def _ratio(count: int, denominator: int) -> float | None:
 def _metrics(
     rows: list[HistoricalReview], detections: dict[str, tuple[ComplaintEvidence, ...]]
 ) -> ReviewMetrics:
+    """Use rated/scanned denominators separately and count each review once per category.
+
+    The overall complaint total is a union, so multi-label reviews cannot inflate it.
+    Withheld bodies remain in volume totals but never imply negative rule evidence.
+    """
     rated = sum(_valid_rating(row.rating) for row in rows)
     negative = sum(_negative(row) for row in rows)
     scanned = sum(row.review_id in detections for row in rows)
@@ -236,6 +241,7 @@ def _metrics(
 def _comparison(
     metric: str, current: ReviewMetrics, previous: ReviewMetrics, minimum: int
 ) -> Comparison:
+    """Require support in both periods before reporting a share change, including zeros."""
     if metric == "negative_rating":
         count, denominator = current.negative_rating_reviews, current.rated_reviews
         old_count, old_denominator = previous.negative_rating_reviews, previous.rated_reviews
@@ -290,7 +296,11 @@ def _candidate(
     detections: dict[str, tuple[ComplaintEvidence, ...]],
     policy: PriorityPolicy,
 ) -> InvestigationCandidate | None:
-    """Prioritise one complete historical comparison with inspectable source evidence."""
+    """Apply transparent count/share thresholds, not estimated incident probabilities.
+
+    Rising signals use the current window; sustained burden pools two supported
+    periods. Accessible original excerpts are required for human investigation.
+    """
     metric = comparison.metric
     negative = metric == "negative_rating"
     increase = policy.negative_increase if negative else policy.complaint_increase

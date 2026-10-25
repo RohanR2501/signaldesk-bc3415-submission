@@ -1,4 +1,4 @@
-"""Read-only historical routes backed by one lazy Sprint A snapshot per app process."""
+"""Read-only historical routes backed by one lazy, provenance-labelled snapshot per process."""
 
 import base64
 import binascii

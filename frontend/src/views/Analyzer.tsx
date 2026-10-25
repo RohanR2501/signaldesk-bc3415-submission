@@ -223,7 +223,7 @@ function SingleReviewAnalyzer({
             <summary>How the analysis works</summary>
             <p>
               The backend first tries saved weighted DistilBERT on GPU, then
-              saved balanced logistic regression on CPU if needed. Frozen
+              saved balanced logistic regression on CPU if needed. Versioned
               complaint rules inspect the full original text independently.
               Neither establishes a verified defect.
             </p>

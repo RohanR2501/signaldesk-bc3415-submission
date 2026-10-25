@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "signaldesk"
 version = "0.1.0"
-description = "Phase 0 foundation for retail text classification decision support"
+description = "Retail review intelligence with local sentiment inference and traceable complaint evidence"
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
 dependencies = [

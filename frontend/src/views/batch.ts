@@ -35,7 +35,7 @@ export const triageLabels = {
 export function feedbackTriage(
   result: AnalyzeResponse,
 ): keyof typeof triageLabels {
-  // Unknown is usable only when every category explicitly reports a completed scan.
+  // Unknown alone cannot establish completion: require all five explicit scan outcomes.
   const scanned =
     result.complaints.length === complaintKeys.length &&
     complaintKeys.every((key) => {
@@ -189,6 +189,8 @@ export async function processBatch(
   for (const row of reviews) {
     if (shouldStop() || signal.aborted) break;
     try {
+      // User cancellation stops the next dispatch; the in-flight request still counts.
+      // Abort is reserved for unmounting, which cannot undo server-side inference.
       const response = await analyze(row.text, signal);
       if (signal.aborted) break;
       onItem({ ...row, status: 'complete', response });
@@ -205,6 +207,7 @@ export async function processBatch(
   }
 }
 
+/** Count actual completed responses; failures/unprocessed rows are not model outcomes. */
 export function batchTotals(items: BatchItem[]) {
   const sentiment = {
     positive: 0,
@@ -243,7 +246,7 @@ export function batchTotals(items: BatchItem[]) {
   };
 }
 
-/** Formula protection is explicit and reversible via spreadsheet_sanitized_fields. */
+/** Export every input row; reversible formula guards protect IDs/text without hiding edits. */
 export function exportBatchCsv(items: BatchItem[]): string {
   const headers = [
     'input_row',

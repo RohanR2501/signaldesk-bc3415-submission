@@ -36,7 +36,11 @@ RELIABILITY = {
 
 
 def complaint_results(text: str | None, review_id: str) -> list[ComplaintDetection]:
-    """Detect on unmodified permitted text; never gate complaints on sentiment."""
+    """Keep five independent rule results; no match is unknown, absent text unavailable.
+
+    Unmodified text preserves v2 Unicode offsets and negation/resolution context.
+    Sentiment never gates complaint evidence, including for positive reviews.
+    """
     detection = detect_complaints(text) if text is not None else None
     results = []
     for category in ComplaintCategory:
@@ -132,6 +136,7 @@ def _load_transformer(path: Path) -> tuple[TextPredictor, dict[str, Any]]:
 
 
 def _load_baseline(path: Path) -> tuple[TextPredictor, dict[str, Any]]:
+    """Reuse training-fitted TF-IDF; fitting on submitted text would change the model."""
     from signaldesk_ml.inference import load_selected
 
     run = json.loads((path / "run.json").read_text(encoding="utf-8"))
@@ -172,6 +177,11 @@ class ReviewAnalyzer:
         self._lock = Lock()
 
     def sentiment(self, text: str) -> LiveSentiment:
+        """Try saved CUDA inference then CPU LR; return labels without invented confidence.
+
+        The lock prevents competing loads/inference; cached failures avoid repeated
+        costly checkpoint attempts on every row of a batch until service restart.
+        """
         attempts: list[ModelAttempt] = []
         with self._lock:
             for name, loader in (

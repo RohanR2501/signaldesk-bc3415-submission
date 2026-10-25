@@ -193,6 +193,7 @@ The project uses the **Amazon Reviews 2023 Appliances** dataset. Preprocessing v
 review text, ratings, product identifiers and UTC timestamps, removes reviewer IDs and
 images, groups exact and bounded near-duplicate text families, and produces chronological,
 family-aware partitions. Original review bodies remain available for traceable evidence.
+Grouping duplicate families prevents repeated text from leaking across partitions.
 
 The sentiment cohort contains 46,064 reviews: 32,230 training, 6,913 validation and
 6,921 sealed test records. A 240-review annotation reservation is excluded from fitting
@@ -212,6 +213,8 @@ classical pipeline.
 
 Two two-epoch DistilBERT experiments compare unweighted cross-entropy with
 training-derived square-root inverse-frequency class weighting. Their original
+weights have training-frequency mean one: square-root weighting moderates imbalance
+without the stronger amplification of full inverse-frequency weighting. Original
 configurations retain seed 3415, training settings and resource limits. Weighted
 DistilBERT is the provisional GPU sentiment component; balanced LR supplies CPU fallback.
 
@@ -229,7 +232,8 @@ Weighted DistilBERT has the highest observed Macro-F1 in these runs, while the u
 model has higher overall accuracy. These comparisons guide model selection; they do
 not establish statistical superiority or independently verified population accuracy.
 Evaluation code retains per-class support, precision/recall/F1, confusion matrices
-and error analysis.
+and error analysis. Macro-F1 gives each class equal weight so the majority positive
+class cannot dominate model selection through accuracy alone.
 
 A separate frozen analysis compared predictions against two 150-review LLM references
 and 20 deliberately selected independent human judgments, preserving uncertainty.
