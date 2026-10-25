@@ -94,6 +94,10 @@ balanced logistic regression. It does not run DistilBERT on CPU or change model 
 First model initialisation may be slow. Missing sentiment artifacts produce explicit
 partial/unavailable results; missing historical files produce unavailable historical views.
 
+Fresh-clone setup, service startup, CUDA inference and CPU fallback were verified on
+the reference Windows machine using cached dependencies. Historical checks used local
+files; this was not a clean-machine installation or a test of historical-data delivery.
+
 ## Application Features
 
 - **Executive Overview:** historical volume, negative-rating burden, complaint scan
