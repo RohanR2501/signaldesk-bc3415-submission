@@ -19,6 +19,64 @@ export type BatchItem = CsvReview & {
   error?: string;
 };
 
+export const triageLabels = {
+  uncategorised_negative: 'Uncategorised negative feedback — review needed',
+  rule_evidence_present: 'Complaint rule evidence present',
+  not_flagged: 'Not flagged for uncategorised-negative triage',
+  sentiment_unavailable: 'Sentiment unavailable',
+  sentiment_unknown: 'Sentiment unknown',
+  sentiment_abstained: 'Sentiment abstained',
+  complaint_analysis_incomplete: 'Complaint analysis incomplete or unavailable',
+  failed: 'Request failed',
+  unprocessed: 'Not processed',
+} as const;
+
+/** A triage hint from completed inference, never a sixth complaint category. */
+export function feedbackTriage(
+  result: AnalyzeResponse,
+): keyof typeof triageLabels {
+  // Unknown is usable only when every category explicitly reports a completed scan.
+  const scanned =
+    result.complaints.length === complaintKeys.length &&
+    complaintKeys.every((key) => {
+      const complaint = result.complaints.find((item) => item.category === key);
+      return (
+        complaint?.method === 'explicit_rules' &&
+        ((complaint.state === 'unknown' &&
+          complaint.reason === 'no_detected_rule_evidence' &&
+          complaint.evidence.length === 0) ||
+          (complaint.state === 'detected' && complaint.evidence.length > 0))
+      );
+    });
+  if (!scanned) return 'complaint_analysis_incomplete';
+  if (result.complaints.some((item) => item.evidence.length > 0))
+    return 'rule_evidence_present';
+  if (result.sentiment.state !== 'detected')
+    return `sentiment_${result.sentiment.state}`;
+  if (!result.sentiment.label) return 'sentiment_unavailable';
+  return result.sentiment.label === 'negative'
+    ? 'uncategorised_negative'
+    : 'not_flagged';
+}
+
+export function batchTriage(item: BatchItem): keyof typeof triageLabels {
+  if (item.status !== 'complete') return item.status;
+  return item.response
+    ? feedbackTriage(item.response)
+    : 'complaint_analysis_incomplete';
+}
+
+export function matchesBatchOutcome(item: BatchItem, outcome: string): boolean {
+  if (outcome === 'uncategorised_negative')
+    return batchTriage(item) === 'uncategorised_negative';
+  return (
+    outcome === 'all' ||
+    outcome === item.status ||
+    outcome === item.response?.sentiment.label ||
+    outcome === item.response?.sentiment.state
+  );
+}
+
 /** Strict comma-separated CSV. Quoted newlines and original field bytes are retained. */
 export function parseReviewCsv(source: string): CsvReview[] {
   const records: string[][] = [];
@@ -160,11 +218,14 @@ export function batchTotals(items: BatchItem[]) {
     complaintKeys.map((key) => [key, 0]),
   ) as Record<ComplaintCategory, number>;
   let processed = 0,
-    failed = 0;
+    failed = 0,
+    uncategorised = 0;
   for (const item of items) {
     if (item.status === 'failed') failed++;
     if (item.status !== 'complete' || !item.response) continue;
     processed++;
+    if (feedbackTriage(item.response) === 'uncategorised_negative')
+      uncategorised++;
     const prediction = item.response.sentiment;
     if (prediction.state === 'detected' && prediction.label)
       sentiment[prediction.label]++;
@@ -178,6 +239,7 @@ export function batchTotals(items: BatchItem[]) {
     unprocessed: items.length - processed - failed,
     sentiment,
     complaints,
+    uncategorised,
   };
 }
 
@@ -188,6 +250,7 @@ export function exportBatchCsv(items: BatchItem[]): string {
     'review_id',
     'text',
     'processing_status',
+    'triage_status',
     'error',
     'api_status',
     'analysis_review_id',
@@ -213,6 +276,7 @@ export function exportBatchCsv(items: BatchItem[]): string {
       item.review_id,
       item.text,
       item.status,
+      batchTriage(item),
       item.error ?? '',
       result?.status ?? '',
       result?.review_id ?? '',

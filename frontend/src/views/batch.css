@@ -130,6 +130,29 @@
   font-size: 14px;
   margin-top: 24px;
 }
+.feedback-triage {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px dashed #c5d3df;
+  border-radius: 6px;
+  background: #f4f6fa;
+  color: #44586c;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.feedback-triage dl {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0;
+}
+.feedback-triage p {
+  margin: 6px 0;
+}
+.feedback-triage small {
+  color: #52677a;
+}
 .batch-complaints dd {
   font-size: 18px;
 }

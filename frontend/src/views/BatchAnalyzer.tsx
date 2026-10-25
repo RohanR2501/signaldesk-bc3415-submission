@@ -6,10 +6,13 @@ import { categories } from '../lib';
 import { ComplaintResult } from './ComplaintEvidence';
 import {
   batchTotals,
+  batchTriage,
   complaintKeys,
   exportBatchCsv,
+  matchesBatchOutcome,
   processBatch,
   readReviewCsv,
+  triageLabels,
   type BatchItem,
 } from './batch';
 
@@ -119,15 +122,11 @@ export function BatchAnalyzer({
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
   const filtered = items.filter((item) => {
-    const sentiment = item.response?.sentiment;
     return (
       `${item.review_id}\n${item.text}`
         .toLowerCase()
         .includes(search.toLowerCase()) &&
-      (outcome === 'all' ||
-        outcome === item.status ||
-        outcome === sentiment?.label ||
-        outcome === sentiment?.state) &&
+      matchesBatchOutcome(item, outcome) &&
       (category === 'all' ||
         item.response?.complaints.some(
           (c) => c.category === category && c.state === 'detected',
@@ -306,6 +305,19 @@ export function BatchAnalyzer({
               unmatched category remains unknown; it does not establish an
               issue-free review. Reports are not verified incidents.
             </p>
+            <div className="feedback-triage">
+              <dl>
+                <dt>Other / Uncategorised Feedback</dt>
+                <dd>{totals.uncategorised}</dd>
+              </dl>
+              <p>
+                Negative sentiment detected, but no complaint category matched.
+                Manual review recommended.
+              </p>
+              <small>
+                Triage indicator · not an independently detected complaint.
+              </small>
+            </div>
           </section>
           <section className="panel batch-results">
             <SectionTitle
@@ -331,6 +343,9 @@ export function BatchAnalyzer({
                   <option value="positive">Positive</option>
                   <option value="neutral">Neutral</option>
                   <option value="negative">Negative</option>
+                  <option value="uncategorised_negative">
+                    Other / Uncategorised Feedback
+                  </option>
                   <option value="unavailable">Sentiment unavailable</option>
                   <option value="unknown">Sentiment unknown</option>
                   <option value="abstained">Sentiment abstained</option>
@@ -384,6 +399,7 @@ export function BatchAnalyzer({
                             ? item.response?.status
                             : item.status}
                         </Badge>
+                        <small>{triageLabels[batchTriage(item)]}</small>
                       </th>
                       <td>
                         <details>

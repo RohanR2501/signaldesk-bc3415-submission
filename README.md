@@ -144,6 +144,12 @@ current request finishes. Results include sentiment counts, complaint counts and
 filterable review table with original text, evidence and actual model identity.
 Request failures stop further dispatch without automatic retries.
 
+An **Other / Uncategorised Feedback** triage indicator highlights successful negative
+sentiment predictions when all five complaint-rule scans completed without evidence.
+It supports manual review, is filterable in batch results and appears as `triage_status`
+in CSV exports. It is not a sixth complaint category or a verified issue; unavailable
+analysis, failed requests and unprocessed rows remain separate.
+
 CSV export includes all input rows and their processing states, regardless of filters.
 Formula-leading cells are prefixed with an apostrophe; `spreadsheet_sanitized_fields`
 identifies those reversible adjustments. Uploaded text and results stay in temporary

@@ -18,6 +18,7 @@ import type { AnalyzeResponse } from '../api/contracts.generated';
 import { number } from '../lib';
 import { ComplaintResult } from './ComplaintEvidence';
 import { BatchAnalyzer } from './BatchAnalyzer';
+import { feedbackTriage } from './batch';
 import './batch.css';
 import { Badge, ErrorNotice, SectionTitle } from '../components/ui';
 
@@ -351,6 +352,12 @@ function SingleReviewAnalyzer({
                   A detection is a customer-reported signal. Unknown means no
                   rule evidence was found.
                 </p>
+                {feedbackTriage(result) === 'uncategorised_negative' && (
+                  <p className="feedback-triage" role="status">
+                    Negative feedback detected, but no specific complaint
+                    category was identified. Consider manual review.
+                  </p>
+                )}
                 <div>
                   {result.complaints.map((complaint) => (
                     <ComplaintResult

@@ -3,8 +3,11 @@ import test from 'node:test';
 import type { AnalyzeResponse } from '../src/api/contracts.generated.ts';
 import {
   batchTotals,
+  batchTriage,
   complaintKeys,
   exportBatchCsv,
+  feedbackTriage,
+  matchesBatchOutcome,
   MAX_CSV_BYTES,
   parseReviewCsv,
   processBatch,
@@ -66,6 +69,116 @@ const partial: AnalyzeResponse = {
   })),
   warnings: [],
 };
+
+function noMatchResponse(
+  label: 'negative' | 'positive' | 'neutral' = 'negative',
+): AnalyzeResponse {
+  return {
+    ...partial,
+    status: 'complete',
+    sentiment: { ...partial.sentiment, state: 'detected', label },
+    complaints: partial.complaints.map((complaint) => ({
+      ...complaint,
+      state: 'unknown',
+      evidence: [],
+      reason: 'no_detected_rule_evidence',
+    })),
+  };
+}
+
+test('uncategorised triage requires negative sentiment and five completed scans without evidence', () => {
+  assert.equal(feedbackTriage(noMatchResponse()), 'uncategorised_negative');
+  for (const label of ['positive', 'neutral'] as const)
+    assert.equal(feedbackTriage(noMatchResponse(label)), 'not_flagged');
+  const supported = noMatchResponse();
+  supported.complaints = partial.complaints;
+  assert.notEqual(feedbackTriage(supported), 'uncategorised_negative');
+  supported.complaints = partial.complaints.map((complaint) => ({
+    ...complaint,
+    reason:
+      complaint.state === 'unknown'
+        ? 'no_detected_rule_evidence'
+        : 'explicit_rule_match',
+  }));
+  assert.equal(feedbackTriage(supported), 'rule_evidence_present');
+});
+
+test('partial, unknown, abstained, unavailable and incomplete analysis never imply other feedback', () => {
+  for (const state of ['unavailable', 'unknown', 'abstained'] as const) {
+    const response = noMatchResponse();
+    response.status = 'partial';
+    response.sentiment = { ...response.sentiment, state, label: null };
+    assert.equal(feedbackTriage(response), `sentiment_${state}`);
+  }
+  for (const state of ['unavailable', 'abstained'] as const) {
+    const response = noMatchResponse();
+    response.status = 'partial';
+    response.complaints[0].state = state;
+    assert.equal(feedbackTriage(response), 'complaint_analysis_incomplete');
+  }
+  const missing = noMatchResponse();
+  missing.complaints.pop();
+  assert.equal(feedbackTriage(missing), 'complaint_analysis_incomplete');
+  const unsupportedUnknown = noMatchResponse();
+  unsupportedUnknown.complaints[0].reason = 'body_unavailable';
+  assert.equal(
+    feedbackTriage(unsupportedUnknown),
+    'complaint_analysis_incomplete',
+  );
+  const duplicate = noMatchResponse();
+  duplicate.complaints[0] = duplicate.complaints[1];
+  assert.equal(feedbackTriage(duplicate), 'complaint_analysis_incomplete');
+  const unavailable = noMatchResponse();
+  unavailable.sentiment.label = null;
+  assert.equal(feedbackTriage(unavailable), 'sentiment_unavailable');
+});
+
+test('batch triage totals and the outcome filter exclude failures and unprocessed rows', () => {
+  const rows: BatchItem[] = [
+    { ...reviews[0], status: 'complete', response: noMatchResponse() },
+    { ...reviews[1], status: 'complete', response: noMatchResponse('neutral') },
+    { ...reviews[2], status: 'complete', response: partial },
+    { ...reviews[0], row: 4, status: 'failed', response: noMatchResponse() },
+    { ...reviews[0], row: 5, status: 'unprocessed' },
+  ];
+  assert.equal(batchTotals(rows).uncategorised, 1);
+  assert.deepEqual(
+    rows.filter((item) => matchesBatchOutcome(item, 'uncategorised_negative')),
+    [rows[0]],
+  );
+  assert.equal(batchTriage(rows[3]), 'failed');
+  assert.equal(batchTriage(rows[4]), 'unprocessed');
+  assert.equal(
+    rows.filter((item) => matchesBatchOutcome(item, 'all')).length,
+    5,
+  );
+  assert.equal(
+    rows.filter((item) => matchesBatchOutcome(item, 'neutral')).length,
+    1,
+  );
+});
+
+test('CSV exports triage separately from unchanged five-category states and source text', () => {
+  const response = noMatchResponse();
+  const csv = exportBatchCsv([
+    { ...reviews[0], status: 'complete', response },
+    { ...reviews[1], status: 'failed' },
+    { ...reviews[2], status: 'unprocessed' },
+  ]);
+  // Read the new column through the existing quoted-CSV parser as the optional ID.
+  const triageCsv = csv
+    .replace('"review_id"', '"input_review_id"')
+    .replace('"triage_status"', '"review_id"');
+  assert.deepEqual(
+    parseReviewCsv(triageCsv).map((row) => row.review_id),
+    ['uncategorised_negative', 'failed', 'unprocessed'],
+  );
+  assert.equal(response.complaints.length, 5);
+  assert.ok(
+    response.complaints.every((complaint) => complaint.state === 'unknown'),
+  );
+  assert.equal(parseReviewCsv(csv)[0].text, reviews[0].text);
+});
 
 test('quoted CSV preserves original IDs, commas, Unicode, multiline text and escaped quotes', () => {
   assert.equal(reviews.length, 3);
