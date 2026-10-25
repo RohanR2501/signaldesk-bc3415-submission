@@ -31,6 +31,39 @@ Implemented API paths under `/api/v1`: `health`, `summary`, `products`,
 `reviews/analyze` (POST). Business payloads use schema 1.1; legacy offline contracts
 and error envelopes retain 1.0. Health is liveness only, not model/data readiness.
 
+### Batch CSV analysis
+
+Inside Live Review Analyzer, choose **Batch CSV Analysis**. Upload a UTF-8 `.csv`
+with a case-sensitive `text` header and optional `review_id`; other columns are
+ignored. Files are limited to **2 MiB and 100 review rows**, with nonblank text of
+at most 50,000 Unicode characters per row. Quoted commas, escaped quotes and multiline
+text are supported. Invalid files are rejected before any analysis; a short preview
+precedes processing. Each input row is counted separately, even if IDs repeat.
+
+Requests use the existing analysis endpoint sequentially. Controls prevent duplicate
+starts; **Cancel remaining** waits for the current response, retains it and stops
+further requests. Leaving the analyzer stops further browser dispatch, but cannot
+guarantee cancellation of an already-running server request. A request failure stops
+the batch without automatic retries. Cold loading can take minutes; actual model,
+device, fallback reason and partial/unavailable states remain visible.
+
+Totals distinguish completed API responses (including partial analyses), failed
+requests and unprocessed rows. Sentiment counts and five independent complaint counts
+use completed responses only. Category counts can overlap. Search/outcome/complaint
+filters affect the results table, not the exported rows. Exact evidence and its
+Unicode offsets use the original uploaded text, independently of sentiment.
+
+**Export CSV** includes every input row, original ID/text, processing state, actual
+predictions, provenance and complaint states/evidence. Spreadsheet-formula-leading
+cells receive an apostrophe; `spreadsheet_sanitized_fields` lists adjusted columns,
+so removing only the added apostrophe recovers the exact original value. JSON columns
+retain model/rule metadata and warnings; no confidence scores are invented.
+
+Uploads/results stay in temporary browser memory, including when switching analyzer
+modes. **Clear batch** or leaving the analyzer discards them. Only an explicit export
+creates a local results file. Nothing enters SQLite, local storage or the historical
+2023 product intelligence. Backend inference, saved models and evaluation are unchanged.
+
 ## Data and ML approach
 
 Source: McAuley Lab, [Amazon Reviews 2023](https://amazon-reviews-2023.github.io/),
@@ -209,6 +242,7 @@ scripts/                Contract export, GPU diagnostic and pinned pretrained ca
 docs/contracts/         Required canonical schema, imported by the frontend
 docs/COMPLAINT_TAXONOMY.md  Immutable, checksum-referenced research specification
 tests/                  Small API/configuration/contract behavior tests
+frontend/tests/         Focused CSV, cancellation and export behavior tests
 ```
 
 The taxonomy preserves its original historical annotation protocol because offline code
@@ -224,11 +258,24 @@ exercised the saved CUDA model. These results are from the original development
 environment, not a new clean-install or ML evaluation claim. Packaging verification
 checks file completeness, imports/references, privacy and ZIP/Git byte equality only.
 
+Batch extension verification: seven focused Node tests passed, as did frontend
+typecheck, lint and production build. A real browser batch of three synthetic reviews
+used saved balanced-LR CPU fallback: 1 positive, 2 negative, 0 neutral/unavailable;
+rule counts were defect 1, arrival 1, service/returns 2, wrong-item/delivery 0.
+Export round-trip preserved original text/IDs (after the documented formula guard)
+and exact Unicode evidence offsets, including quoted commas and multiline text.
+Cancellation retained 9 completed responses and left 91 of a 100-row input unprocessed.
+With both model paths absent, all three responses were partial/unavailable for
+sentiment while retaining rule evidence. Single-review inference, filtering and
+narrow layout were checked. Normal backend configuration was restored. No new GPU
+inference, training or evaluation was run.
+
 Optional lightweight checks, after installation:
 
 ```powershell
 .\.tools\Scripts\uv.exe run --frozen --extra data --extra baselines pytest
 .\.tools\Scripts\uv.exe run --frozen python scripts/export_contracts.py --check
+npm.cmd --prefix frontend run test:batch
 npm.cmd --prefix frontend run typecheck
 npm.cmd --prefix frontend run lint
 npm.cmd --prefix frontend run build

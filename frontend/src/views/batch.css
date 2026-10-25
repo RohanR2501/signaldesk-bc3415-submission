@@ -1,0 +1,248 @@
+.analyzer-modes {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  width: fit-content;
+  border: 1px solid #dbe5e8;
+  border-radius: 8px;
+  background: #edf2f5;
+}
+.analyzer-modes button {
+  padding: 11px 18px;
+  border: 0;
+  border-radius: 5px;
+  color: #5b7082;
+  font-size: 12px;
+  font-weight: 600;
+}
+.analyzer-modes button[aria-pressed='true'] {
+  color: #155e59;
+  background: white;
+  box-shadow: 0 1px 4px #18394a14;
+}
+.analyzer-modes button:disabled {
+  cursor: wait;
+}
+.batch-upload,
+.batch-summary,
+.batch-results {
+  padding: 25px;
+  min-width: 0;
+}
+.batch-upload input[type='file'] {
+  display: block;
+  margin: 12px 0;
+  max-width: 100%;
+  font-size: 13px;
+}
+.batch-upload input::file-selector-button {
+  padding: 9px 13px;
+  margin-right: 12px;
+  border: 1px solid #cbdadb;
+  border-radius: 5px;
+  background: #f1f7f7;
+  color: #276961;
+  cursor: pointer;
+}
+.batch-upload .muted,
+.batch-results .muted {
+  font-size: 12px;
+  line-height: 1.8;
+}
+.batch-file-summary {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  margin-top: 20px;
+}
+.batch-preview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+.batch-preview li {
+  border: 1px solid #e1e9eb;
+  padding: 13px;
+  border-radius: 6px;
+  min-width: 0;
+}
+.batch-preview small {
+  color: #647b8a;
+  overflow-wrap: anywhere;
+}
+.batch-preview p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.batch-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+.batch-progress {
+  font-size: 13px;
+  line-height: 1.8;
+}
+.batch-progress p {
+  color: #647b8a;
+}
+.batch-progress progress {
+  display: block;
+  width: 100%;
+  height: 9px;
+  accent-color: #27867c;
+  margin: 14px 0 22px;
+}
+.batch-sentiments,
+.batch-complaints {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.batch-sentiments div,
+.batch-complaints div {
+  background: #f5f8fa;
+  border-radius: 6px;
+  padding: 15px;
+}
+.batch-sentiments dt {
+  text-transform: capitalize;
+}
+.batch-analyzer dt {
+  font-size: 12px;
+  color: #637a89;
+  line-height: 1.5;
+}
+.batch-analyzer dd {
+  margin: 8px 0 0;
+  font-size: 23px;
+  font-weight: 600;
+  color: #1c4b55;
+}
+.batch-complaints {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+.batch-summary h3 {
+  font-size: 14px;
+  margin-top: 24px;
+}
+.batch-complaints dd {
+  font-size: 18px;
+}
+.batch-complaints dd small {
+  display: block;
+  font-size: 10px;
+  font-weight: 400;
+  color: #69818d;
+}
+.batch-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 20px 0;
+}
+.batch-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 11px;
+  color: #617888;
+  flex: 1 1 170px;
+}
+.batch-filters input,
+.batch-filters select {
+  padding: 10px;
+  width: 100%;
+  border: 1px solid #d6e2e7;
+  border-radius: 5px;
+  background: white;
+  color: #304c5d;
+  font-size: 12px;
+}
+.batch-table-scroll {
+  max-height: 680px;
+}
+.batch-results table {
+  min-width: 1000px;
+  table-layout: fixed;
+  width: 100%;
+}
+.batch-results th:first-child {
+  width: 16%;
+}
+.batch-results td {
+  vertical-align: top;
+  font-size: 12px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.batch-results tbody th {
+  vertical-align: top;
+  text-align: left;
+  white-space: normal;
+  padding: 17px;
+  overflow-wrap: anywhere;
+}
+.batch-results tbody th > * {
+  display: block;
+  margin-bottom: 10px;
+}
+.batch-results summary {
+  cursor: pointer;
+  color: #276b69;
+  white-space: normal;
+}
+.batch-results pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 11px;
+  line-height: 1.8;
+  max-height: 260px;
+  overflow: auto;
+}
+.batch-results .batch-original {
+  font-family: inherit;
+  font-size: 12px;
+}
+.batch-results .complaint-result summary {
+  flex-wrap: wrap;
+}
+.batch-results .complaint-result strong {
+  min-width: 100px;
+}
+.batch-results .complaint-body {
+  padding-inline: 10px;
+}
+.batch-results .complaint-body .evidence-item {
+  margin-bottom: 12px;
+}
+.batch-results .chart-note {
+  margin-bottom: 0;
+}
+@media (max-width: 900px) {
+  .batch-sentiments,
+  .batch-complaints {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .batch-preview {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 700px) {
+  .batch-upload,
+  .batch-summary,
+  .batch-results {
+    padding: 18px;
+  }
+  .analyzer-modes {
+    width: 100%;
+  }
+  .analyzer-modes button {
+    flex: 1;
+    padding-inline: 8px;
+  }
+}
