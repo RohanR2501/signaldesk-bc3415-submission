@@ -1,0 +1,20 @@
+{
+  "version": "sentiment-distilbert-weighted-v1",
+  "artifact_directory": "artifacts/sentiment/distilbert-weighted-v1",
+  "baseline_directory": "artifacts/sentiment/baselines-v1",
+  "reference_directory": "artifacts/sentiment/distilbert-v1",
+  "model": "distilbert/distilbert-base-uncased",
+  "revision": "12040accade4e8a0f71eabdb258fecc2e7e948be",
+  "seed": 3415,
+  "epochs": 2,
+  "learning_rate": 0.00002,
+  "weight_decay": 0.01,
+  "warmup_fraction": 0.1,
+  "batch_size": 16,
+  "gradient_accumulation": 2,
+  "evaluation_batch_size": 32,
+  "length_sample_size": 2048,
+  "maximum_training_seconds": 1500,
+  "loss": "sqrt_inverse_frequency_cross_entropy",
+  "selection_metric": "macro_f1"
+}

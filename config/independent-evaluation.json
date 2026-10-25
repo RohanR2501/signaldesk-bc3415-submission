@@ -1,0 +1,30 @@
+{
+  "version": "independent-evaluation-v1",
+  "seed": 3415,
+  "per_stratum": 50,
+  "annotation_directory": "data/annotations/evaluation-v1",
+  "primary_csv": "data/annotations/evaluation-v1/annotation_primary_150.csv",
+  "targeted_csv": "data/annotations/sentiment-v1/complaints-v1/annotation_targeted_optional.csv",
+  "result_directory": "artifacts/evaluation/independent-v1",
+  "minimum_human_positive_support": 20,
+  "minimum_human_negative_support": 20,
+  "sentiment_models": {
+    "balanced_logistic_regression": "artifacts/sentiment/baselines-v1",
+    "unweighted_distilbert": "artifacts/sentiment/distilbert-v1",
+    "weighted_distilbert": "artifacts/sentiment/distilbert-weighted-v1"
+  },
+  "complaint_directory": "artifacts/complaints/models-v1",
+  "sentiment_values": ["negative", "neutral", "positive", "uncertain"],
+  "complaint_values": ["yes", "no", "uncertain"],
+  "complaint_categories": [
+    "product_defect", "arrival_damage", "wrong_item", "delivery_issue", "service_return_issue"
+  ],
+  "ambiguity_values": ["true", "false"],
+  "missing_policy": "refuse evaluation until all labels and ambiguity are explicitly completed",
+  "uncertain_policy": "exclude uncertain human cells from category-specific metrics; disclose counts",
+  "complaint_metric_policy": "all-known detection plus decided-only metrics; unknown states stay distinct",
+  "undefined_metric_policy": "complaint ratios with zero denominator are null; sentiment reuses disclosed baseline zero_division=0",
+  "cohort_policy": "primary150 and targeted20 separately; unused90 never read by evaluation; no prevalence claims",
+  "threshold_policy": "reuse exact saved complaint thresholds; no fitting, calibration or optimisation",
+  "cpu_threads": 4
+}

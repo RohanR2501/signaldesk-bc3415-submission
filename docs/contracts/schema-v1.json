@@ -1,0 +1,2224 @@
+{
+  "$defs": {
+    "AnalyzeRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1.1",
+          "default": "1.1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "text": {
+          "maxLength": 50000,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "title": "AnalyzeRequest",
+      "type": "object"
+    },
+    "AnalyzeResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "analyzed_at": {
+          "format": "date-time",
+          "title": "Analyzed At",
+          "type": "string"
+        },
+        "complaints": {
+          "items": {
+            "$ref": "#/$defs/ComplaintDetection"
+          },
+          "title": "Complaints",
+          "type": "array"
+        },
+        "review_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Review Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.1",
+          "default": "1.1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sentiment": {
+          "$ref": "#/$defs/LiveSentiment"
+        },
+        "status": {
+          "enum": [
+            "complete",
+            "partial"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "warnings": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "review_id",
+        "analyzed_at",
+        "status",
+        "sentiment",
+        "complaints",
+        "warnings"
+      ],
+      "title": "AnalyzeResponse",
+      "type": "object"
+    },
+    "ComplaintCategory": {
+      "enum": [
+        "product_defect",
+        "arrival_damage",
+        "wrong_item",
+        "delivery_issue",
+        "service_return_issue"
+      ],
+      "title": "ComplaintCategory",
+      "type": "string"
+    },
+    "ComplaintDetection": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "$ref": "#/$defs/ComplaintCategory"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/ReviewExcerpt"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "learned_model_state": {
+          "default": "not_used",
+          "enum": [
+            "not_used",
+            "unavailable"
+          ],
+          "title": "Learned Model State",
+          "type": "string"
+        },
+        "method": {
+          "const": "explicit_rules",
+          "default": "explicit_rules",
+          "title": "Method",
+          "type": "string"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        },
+        "reliability_warning": {
+          "title": "Reliability Warning",
+          "type": "string"
+        },
+        "rule_version": {
+          "title": "Rule Version",
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/DetectionState"
+        },
+        "taxonomy_version": {
+          "title": "Taxonomy Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "category",
+        "state",
+        "rule_version",
+        "taxonomy_version",
+        "reason",
+        "reliability_warning"
+      ],
+      "title": "ComplaintDetection",
+      "type": "object"
+    },
+    "ComplaintLabel": {
+      "description": "Legacy preliminary vocabulary; retained for frozen experiment compatibility only.",
+      "enum": [
+        "suspected_product_defect",
+        "wrong_item",
+        "delivery_problem",
+        "packaging_damage",
+        "customer_service"
+      ],
+      "title": "ComplaintLabel",
+      "type": "string"
+    },
+    "ComplaintPrediction": {
+      "additionalProperties": false,
+      "properties": {
+        "calibration": {
+          "enum": [
+            "uncalibrated",
+            "validated_calibration"
+          ],
+          "title": "Calibration",
+          "type": "string"
+        },
+        "escalation_reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Escalation Reasons",
+          "type": "array"
+        },
+        "model_version": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Model Version",
+          "type": "string"
+        },
+        "predicted_at": {
+          "format": "date-time",
+          "title": "Predicted At",
+          "type": "string"
+        },
+        "preprocessing_version": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Preprocessing Version",
+          "type": "string"
+        },
+        "requires_human_review": {
+          "title": "Requires Human Review",
+          "type": "boolean"
+        },
+        "review_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Review Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "scores": {
+          "items": {
+            "$ref": "#/$defs/ComplaintScore"
+          },
+          "title": "Scores",
+          "type": "array"
+        },
+        "taxonomy_version": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Taxonomy Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "review_id",
+        "model_version",
+        "preprocessing_version",
+        "predicted_at",
+        "requires_human_review",
+        "taxonomy_version",
+        "calibration",
+        "scores"
+      ],
+      "title": "ComplaintPrediction",
+      "type": "object"
+    },
+    "ComplaintScore": {
+      "properties": {
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/EvidenceSpan"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "label": {
+          "$ref": "#/$defs/ComplaintLabel"
+        },
+        "probability": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Probability",
+          "type": "number"
+        },
+        "selected": {
+          "title": "Selected",
+          "type": "boolean"
+        },
+        "threshold": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Threshold",
+          "type": "number"
+        }
+      },
+      "required": [
+        "label",
+        "probability",
+        "threshold",
+        "selected"
+      ],
+      "title": "ComplaintScore",
+      "type": "object"
+    },
+    "CustomerReview": {
+      "additionalProperties": false,
+      "properties": {
+        "ingested_at": {
+          "format": "date-time",
+          "title": "Ingested At",
+          "type": "string"
+        },
+        "language": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Language"
+        },
+        "product_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Product Id",
+          "type": "string"
+        },
+        "rating": {
+          "anyOf": [
+            {
+              "maximum": 5,
+              "minimum": 1,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rating"
+        },
+        "review_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Review Id",
+          "type": "string"
+        },
+        "reviewed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewed At"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "source": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Source",
+          "type": "string"
+        },
+        "source_revision": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Source Revision",
+          "type": "string"
+        },
+        "text": {
+          "maxLength": 50000,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Title"
+        }
+      },
+      "required": [
+        "review_id",
+        "product_id",
+        "source",
+        "source_revision",
+        "text",
+        "ingested_at"
+      ],
+      "title": "CustomerReview",
+      "type": "object"
+    },
+    "DetectionState": {
+      "enum": [
+        "detected",
+        "unknown",
+        "abstained",
+        "unavailable"
+      ],
+      "title": "DetectionState",
+      "type": "string"
+    },
+    "ErrorBody": {
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "details": {
+          "items": {
+            "$ref": "#/$defs/ErrorDetail"
+          },
+          "title": "Details",
+          "type": "array"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "title": "ErrorBody",
+      "type": "object"
+    },
+    "ErrorDetail": {
+      "properties": {
+        "location": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "title": "Location",
+          "type": "array"
+        },
+        "type": {
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "location",
+        "type"
+      ],
+      "title": "ErrorDetail",
+      "type": "object"
+    },
+    "ErrorResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "error": {
+          "$ref": "#/$defs/ErrorBody"
+        },
+        "request_id": {
+          "title": "Request Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "error",
+        "request_id"
+      ],
+      "title": "ErrorResponse",
+      "type": "object"
+    },
+    "EvaluationMetric": {
+      "properties": {
+        "averaging": {
+          "enum": [
+            "macro",
+            "micro",
+            "weighted",
+            "per_class",
+            "none"
+          ],
+          "title": "Averaging",
+          "type": "string"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Label"
+        },
+        "name": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "unit": {
+          "enum": [
+            "fraction",
+            "milliseconds",
+            "count"
+          ],
+          "title": "Unit",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "number"
+        }
+      },
+      "required": [
+        "name",
+        "value",
+        "averaging",
+        "unit"
+      ],
+      "title": "EvaluationMetric",
+      "type": "object"
+    },
+    "EvidenceSpan": {
+      "properties": {
+        "end": {
+          "exclusiveMinimum": 0,
+          "title": "End",
+          "type": "integer"
+        },
+        "method": {
+          "enum": [
+            "feature_attribution",
+            "extractive_model",
+            "human_annotation"
+          ],
+          "title": "Method",
+          "type": "string"
+        },
+        "start": {
+          "minimum": 0,
+          "title": "Start",
+          "type": "integer"
+        },
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end",
+        "text",
+        "method"
+      ],
+      "title": "EvidenceSpan",
+      "type": "object"
+    },
+    "ExecutiveSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "candidate_count": {
+          "minimum": 0,
+          "title": "Candidate Count",
+          "type": "integer"
+        },
+        "candidate_product_count": {
+          "minimum": 0,
+          "title": "Candidate Product Count",
+          "type": "integer"
+        },
+        "context": {
+          "$ref": "#/$defs/HistoricalContext"
+        },
+        "policy": {
+          "$ref": "#/$defs/PriorityRules"
+        },
+        "product_count": {
+          "minimum": 0,
+          "title": "Product Count",
+          "type": "integer"
+        },
+        "schema_version": {
+          "const": "1.1",
+          "default": "1.1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "totals": {
+          "$ref": "#/$defs/HistoricalMetrics"
+        }
+      },
+      "required": [
+        "context",
+        "totals",
+        "product_count",
+        "candidate_count",
+        "candidate_product_count",
+        "policy"
+      ],
+      "title": "ExecutiveSummary",
+      "type": "object"
+    },
+    "HealthResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "api_version": {
+          "const": "v1",
+          "default": "v1",
+          "title": "Api Version",
+          "type": "string"
+        },
+        "model_status": {
+          "const": "not_checked",
+          "default": "not_checked",
+          "title": "Model Status",
+          "type": "string"
+        },
+        "phase": {
+          "const": 4,
+          "default": 4,
+          "title": "Phase",
+          "type": "integer"
+        },
+        "schema_version": {
+          "const": "1.1",
+          "default": "1.1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "service": {
+          "const": "signaldesk",
+          "default": "signaldesk",
+          "title": "Service",
+          "type": "string"
+        },
+        "status": {
+          "const": "ok",
+          "default": "ok",
+          "title": "Status",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "version"
+      ],
+      "title": "HealthResponse",
+      "type": "object"
+    },
+    "HistoricalContext": {
+      "additionalProperties": false,
+      "properties": {
+        "as_of": {
+          "format": "date-time",
+          "title": "As Of",
+          "type": "string"
+        },
+        "dataset_revision": {
+          "title": "Dataset Revision",
+          "type": "string"
+        },
+        "engine_version": {
+          "title": "Engine Version",
+          "type": "string"
+        },
+        "first_review_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "First Review At"
+        },
+        "investigation_sha256": {
+          "title": "Investigation Sha256",
+          "type": "string"
+        },
+        "last_review_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Last Review At"
+        },
+        "manifest_sha256": {
+          "title": "Manifest Sha256",
+          "type": "string"
+        },
+        "mode": {
+          "const": "historical_snapshot",
+          "default": "historical_snapshot",
+          "title": "Mode",
+          "type": "string"
+        },
+        "reservation_sha256": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Reservation Sha256",
+          "type": "object"
+        },
+        "rule_version": {
+          "title": "Rule Version",
+          "type": "string"
+        },
+        "rules_sha256": {
+          "title": "Rules Sha256",
+          "type": "string"
+        },
+        "snapshot_id": {
+          "title": "Snapshot Id",
+          "type": "string"
+        },
+        "source_revisions": {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Source Revisions",
+          "type": "array"
+        },
+        "taxonomy_version": {
+          "title": "Taxonomy Version",
+          "type": "string"
+        },
+        "warnings": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "snapshot_id",
+        "as_of",
+        "first_review_at",
+        "last_review_at",
+        "dataset_revision",
+        "manifest_sha256",
+        "investigation_sha256",
+        "rules_sha256",
+        "reservation_sha256",
+        "source_revisions",
+        "engine_version",
+        "taxonomy_version",
+        "rule_version",
+        "warnings"
+      ],
+      "title": "HistoricalContext",
+      "type": "object"
+    },
+    "HistoricalMetrics": {
+      "additionalProperties": false,
+      "properties": {
+        "any_complaint_reviews": {
+          "minimum": 0,
+          "title": "Any Complaint Reviews",
+          "type": "integer"
+        },
+        "complaint_model_states": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Complaint Model States",
+          "type": "array"
+        },
+        "complaint_provenance": {
+          "title": "Complaint Provenance",
+          "type": "string"
+        },
+        "complaint_reviews": {
+          "additionalProperties": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "propertyNames": {
+            "$ref": "#/$defs/ComplaintCategory"
+          },
+          "title": "Complaint Reviews",
+          "type": "object"
+        },
+        "complaint_shares": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "propertyNames": {
+            "$ref": "#/$defs/ComplaintCategory"
+          },
+          "title": "Complaint Shares",
+          "type": "object"
+        },
+        "missing_timestamp_reviews": {
+          "minimum": 0,
+          "title": "Missing Timestamp Reviews",
+          "type": "integer"
+        },
+        "negative_provenance": {
+          "title": "Negative Provenance",
+          "type": "string"
+        },
+        "negative_rating_reviews": {
+          "minimum": 0,
+          "title": "Negative Rating Reviews",
+          "type": "integer"
+        },
+        "negative_rating_share": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Negative Rating Share"
+        },
+        "rated_reviews": {
+          "minimum": 0,
+          "title": "Rated Reviews",
+          "type": "integer"
+        },
+        "review_provenance": {
+          "title": "Review Provenance",
+          "type": "string"
+        },
+        "rule_scanned_reviews": {
+          "minimum": 0,
+          "title": "Rule Scanned Reviews",
+          "type": "integer"
+        },
+        "sentiment_model_state": {
+          "const": "unavailable",
+          "title": "Sentiment Model State",
+          "type": "string"
+        },
+        "text_unavailable_reasons": {
+          "additionalProperties": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "title": "Text Unavailable Reasons",
+          "type": "object"
+        },
+        "unique_reviews": {
+          "minimum": 0,
+          "title": "Unique Reviews",
+          "type": "integer"
+        },
+        "unknown_no_evidence_reviews": {
+          "minimum": 0,
+          "title": "Unknown No Evidence Reviews",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "unique_reviews",
+        "rated_reviews",
+        "negative_rating_reviews",
+        "negative_rating_share",
+        "rule_scanned_reviews",
+        "any_complaint_reviews",
+        "complaint_reviews",
+        "complaint_shares",
+        "unknown_no_evidence_reviews",
+        "text_unavailable_reasons",
+        "missing_timestamp_reviews",
+        "sentiment_model_state",
+        "complaint_model_states",
+        "negative_provenance",
+        "complaint_provenance",
+        "review_provenance"
+      ],
+      "title": "HistoricalMetrics",
+      "type": "object"
+    },
+    "HumanReviewDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "alert_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Alert Id",
+          "type": "string"
+        },
+        "decided_at": {
+          "format": "date-time",
+          "title": "Decided At",
+          "type": "string"
+        },
+        "decision": {
+          "enum": [
+            "investigate",
+            "dismiss_signal",
+            "request_more_evidence",
+            "close_investigation"
+          ],
+          "title": "Decision",
+          "type": "string"
+        },
+        "decision_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Decision Id",
+          "type": "string"
+        },
+        "rationale": {
+          "maxLength": 5000,
+          "minLength": 1,
+          "title": "Rationale",
+          "type": "string"
+        },
+        "reviewer_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Reviewer Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "supersedes_decision_id": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Supersedes Decision Id"
+        },
+        "supporting_review_ids": {
+          "items": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Supporting Review Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "decision_id",
+        "alert_id",
+        "reviewer_id",
+        "decided_at",
+        "decision",
+        "rationale"
+      ],
+      "title": "HumanReviewDecision",
+      "type": "object"
+    },
+    "InvestigationDetail": {
+      "additionalProperties": false,
+      "properties": {
+        "context": {
+          "$ref": "#/$defs/HistoricalContext"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/ReviewExcerpt"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "policy": {
+          "$ref": "#/$defs/PriorityRules"
+        },
+        "schema_version": {
+          "const": "1.1",
+          "default": "1.1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "signal": {
+          "$ref": "#/$defs/InvestigationSignal"
+        },
+        "supporting_review_ids": {
+          "items": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Supporting Review Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "context",
+        "signal",
+        "supporting_review_ids",
+        "evidence",
+        "policy"
+      ],
+      "title": "InvestigationDetail",
+      "type": "object"
+    },
+    "InvestigationSignal": {
+      "additionalProperties": false,
+      "properties": {
+        "comparison": {
+          "$ref": "#/$defs/MetricComparison"
+        },
+        "evidence_unavailable_reviews": {
+          "minimum": 0,
+          "title": "Evidence Unavailable Reviews",
+          "type": "integer"
+        },
+        "explanation": {
+          "title": "Explanation",
+          "type": "string"
+        },
+        "metric": {
+          "enum": [
+            "negative_rating",
+            "product_defect",
+            "arrival_damage",
+            "wrong_item",
+            "delivery_issue",
+            "service_return_issue"
+          ],
+          "title": "Metric",
+          "type": "string"
+        },
+        "product_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Product Id",
+          "type": "string"
+        },
+        "reason": {
+          "enum": [
+            "rising_share",
+            "sustained_burden"
+          ],
+          "title": "Reason",
+          "type": "string"
+        },
+        "signal_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Signal Id",
+          "type": "string"
+        },
+        "signal_type": {
+          "const": "historical_customer_reported_or_rating_proxy",
+          "title": "Signal Type",
+          "type": "string"
+        },
+        "status": {
+          "const": "candidate_requires_human_investigation",
+          "title": "Status",
+          "type": "string"
+        },
+        "window_denominator": {
+          "minimum": 0,
+          "title": "Window Denominator",
+          "type": "integer"
+        },
+        "window_end": {
+          "format": "date-time",
+          "title": "Window End",
+          "type": "string"
+        },
+        "window_report_count": {
+          "minimum": 0,
+          "title": "Window Report Count",
+          "type": "integer"
+        },
+        "window_start": {
+          "format": "date-time",
+          "title": "Window Start",
+          "type": "string"
+        }
+      },
+      "required": [
+        "signal_id",
+        "product_id",
+        "metric",
+        "reason",
+        "comparison",
+        "window_start",
+        "window_end",
+        "window_report_count",
+        "window_denominator",
+        "evidence_unavailable_reviews",
+        "status",
+        "signal_type",
+        "explanation"
+      ],
+      "title": "InvestigationSignal",
+      "type": "object"
+    },
+    "LiveSentiment": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_sha256": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Artifact Sha256",
+          "type": "object"
+        },
+        "attempts": {
+          "items": {
+            "$ref": "#/$defs/ModelAttempt"
+          },
+          "title": "Attempts",
+          "type": "array"
+        },
+        "calibration": {
+          "const": "uncalibrated",
+          "default": "uncalibrated",
+          "title": "Calibration",
+          "type": "string"
+        },
+        "device": {
+          "anyOf": [
+            {
+              "enum": [
+                "cuda:0",
+                "cpu"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Device"
+        },
+        "fallback_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fallback Reason"
+        },
+        "input_provenance": {
+          "const": "submitted_review_text_only",
+          "default": "submitted_review_text_only",
+          "title": "Input Provenance",
+          "type": "string"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SentimentLabel"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "manifest_sha256": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Manifest Sha256"
+        },
+        "max_tokens": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Tokens"
+        },
+        "model_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model Version"
+        },
+        "preprocessing": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Preprocessing"
+        },
+        "score_state": {
+          "const": "not_returned_by_saved_label_interface",
+          "default": "not_returned_by_saved_label_interface",
+          "title": "Score State",
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/DetectionState"
+        }
+      },
+      "required": [
+        "state"
+      ],
+      "title": "LiveSentiment",
+      "type": "object"
+    },
+    "MetricComparison": {
+      "additionalProperties": false,
+      "properties": {
+        "current_count": {
+          "minimum": 0,
+          "title": "Current Count",
+          "type": "integer"
+        },
+        "current_denominator": {
+          "minimum": 0,
+          "title": "Current Denominator",
+          "type": "integer"
+        },
+        "metric": {
+          "enum": [
+            "negative_rating",
+            "product_defect",
+            "arrival_damage",
+            "wrong_item",
+            "delivery_issue",
+            "service_return_issue"
+          ],
+          "title": "Metric",
+          "type": "string"
+        },
+        "previous_count": {
+          "minimum": 0,
+          "title": "Previous Count",
+          "type": "integer"
+        },
+        "previous_denominator": {
+          "minimum": 0,
+          "title": "Previous Denominator",
+          "type": "integer"
+        },
+        "share_change": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": -1,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Share Change"
+        },
+        "state": {
+          "enum": [
+            "comparable",
+            "insufficient_support"
+          ],
+          "title": "State",
+          "type": "string"
+        }
+      },
+      "required": [
+        "metric",
+        "state",
+        "current_count",
+        "current_denominator",
+        "previous_count",
+        "previous_denominator",
+        "share_change"
+      ],
+      "title": "MetricComparison",
+      "type": "object"
+    },
+    "ModelAttempt": {
+      "additionalProperties": false,
+      "properties": {
+        "model": {
+          "title": "Model",
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        },
+        "state": {
+          "enum": [
+            "used",
+            "unavailable"
+          ],
+          "title": "State",
+          "type": "string"
+        }
+      },
+      "required": [
+        "model",
+        "state"
+      ],
+      "title": "ModelAttempt",
+      "type": "object"
+    },
+    "ModelEvaluationResult": {
+      "additionalProperties": false,
+      "properties": {
+        "annotation_version": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Annotation Version",
+          "type": "string"
+        },
+        "code_revision": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Code Revision",
+          "type": "string"
+        },
+        "confusion_matrix_artifact": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confusion Matrix Artifact"
+        },
+        "dataset_revision": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Dataset Revision",
+          "type": "string"
+        },
+        "environment_lock_hash": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Environment Lock Hash",
+          "type": "string"
+        },
+        "evaluated_at": {
+          "format": "date-time",
+          "title": "Evaluated At",
+          "type": "string"
+        },
+        "evaluation_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Evaluation Id",
+          "type": "string"
+        },
+        "limitations": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Limitations",
+          "type": "array"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/EvaluationMetric"
+          },
+          "minItems": 1,
+          "title": "Metrics",
+          "type": "array"
+        },
+        "model_version": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Model Version",
+          "type": "string"
+        },
+        "sample_count": {
+          "exclusiveMinimum": 0,
+          "title": "Sample Count",
+          "type": "integer"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "split": {
+          "enum": [
+            "validation",
+            "test"
+          ],
+          "title": "Split",
+          "type": "string"
+        },
+        "split_manifest_hash": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Split Manifest Hash",
+          "type": "string"
+        },
+        "task": {
+          "enum": [
+            "sentiment",
+            "complaint_multilabel"
+          ],
+          "title": "Task",
+          "type": "string"
+        }
+      },
+      "required": [
+        "evaluation_id",
+        "task",
+        "model_version",
+        "dataset_revision",
+        "split_manifest_hash",
+        "annotation_version",
+        "code_revision",
+        "environment_lock_hash",
+        "evaluated_at",
+        "sample_count",
+        "split",
+        "metrics",
+        "limitations"
+      ],
+      "title": "ModelEvaluationResult",
+      "type": "object"
+    },
+    "Page_InvestigationSignal_": {
+      "additionalProperties": false,
+      "properties": {
+        "context": {
+          "$ref": "#/$defs/HistoricalContext"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/InvestigationSignal"
+          },
+          "title": "Items",
+          "type": "array"
+        },
+        "limit": {
+          "maximum": 100,
+          "minimum": 1,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "next_cursor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Next Cursor"
+        },
+        "schema_version": {
+          "const": "1.1",
+          "default": "1.1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "total": {
+          "minimum": 0,
+          "title": "Total",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "context",
+        "items",
+        "total",
+        "limit",
+        "next_cursor"
+      ],
+      "title": "Page[InvestigationSignal]",
+      "type": "object"
+    },
+    "Page_ProductSummary_": {
+      "additionalProperties": false,
+      "properties": {
+        "context": {
+          "$ref": "#/$defs/HistoricalContext"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/ProductSummary"
+          },
+          "title": "Items",
+          "type": "array"
+        },
+        "limit": {
+          "maximum": 100,
+          "minimum": 1,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "next_cursor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Next Cursor"
+        },
+        "schema_version": {
+          "const": "1.1",
+          "default": "1.1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "total": {
+          "minimum": 0,
+          "title": "Total",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "context",
+        "items",
+        "total",
+        "limit",
+        "next_cursor"
+      ],
+      "title": "Page[ProductSummary]",
+      "type": "object"
+    },
+    "PriorityRules": {
+      "additionalProperties": false,
+      "properties": {
+        "complaint_increase": {
+          "title": "Complaint Increase",
+          "type": "number"
+        },
+        "evidence_limit": {
+          "title": "Evidence Limit",
+          "type": "integer"
+        },
+        "min_denominator": {
+          "title": "Min Denominator",
+          "type": "integer"
+        },
+        "min_reports": {
+          "title": "Min Reports",
+          "type": "integer"
+        },
+        "min_sustained_reports": {
+          "title": "Min Sustained Reports",
+          "type": "integer"
+        },
+        "negative_increase": {
+          "title": "Negative Increase",
+          "type": "number"
+        },
+        "sustained_complaint_share": {
+          "title": "Sustained Complaint Share",
+          "type": "number"
+        },
+        "sustained_negative_share": {
+          "title": "Sustained Negative Share",
+          "type": "number"
+        }
+      },
+      "required": [
+        "min_denominator",
+        "min_reports",
+        "negative_increase",
+        "complaint_increase",
+        "sustained_negative_share",
+        "sustained_complaint_share",
+        "min_sustained_reports",
+        "evidence_limit"
+      ],
+      "title": "PriorityRules",
+      "type": "object"
+    },
+    "ProductDetail": {
+      "additionalProperties": false,
+      "properties": {
+        "candidate_count": {
+          "minimum": 0,
+          "title": "Candidate Count",
+          "type": "integer"
+        },
+        "context": {
+          "$ref": "#/$defs/HistoricalContext"
+        },
+        "product": {
+          "$ref": "#/$defs/ProductSummary"
+        },
+        "schema_version": {
+          "const": "1.1",
+          "default": "1.1",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "context",
+        "product",
+        "candidate_count"
+      ],
+      "title": "ProductDetail",
+      "type": "object"
+    },
+    "ProductIncidentAlert": {
+      "additionalProperties": false,
+      "properties": {
+        "alert_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Alert Id",
+          "type": "string"
+        },
+        "category": {
+          "$ref": "#/$defs/ComplaintLabel"
+        },
+        "complaint_review_count": {
+          "minimum": 0,
+          "title": "Complaint Review Count",
+          "type": "integer"
+        },
+        "eligible_review_count": {
+          "exclusiveMinimum": 0,
+          "title": "Eligible Review Count",
+          "type": "integer"
+        },
+        "generated_at": {
+          "format": "date-time",
+          "title": "Generated At",
+          "type": "string"
+        },
+        "model_version": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Model Version",
+          "type": "string"
+        },
+        "product_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Product Id",
+          "type": "string"
+        },
+        "rule_version": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Rule Version",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "signal_type": {
+          "const": "customer_reported_suspected_issue",
+          "default": "customer_reported_suspected_issue",
+          "title": "Signal Type",
+          "type": "string"
+        },
+        "status": {
+          "default": "open",
+          "enum": [
+            "open",
+            "under_review",
+            "closed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "supporting_review_ids": {
+          "items": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Supporting Review Ids",
+          "type": "array"
+        },
+        "window_end": {
+          "format": "date-time",
+          "title": "Window End",
+          "type": "string"
+        },
+        "window_start": {
+          "format": "date-time",
+          "title": "Window Start",
+          "type": "string"
+        }
+      },
+      "required": [
+        "alert_id",
+        "product_id",
+        "category",
+        "window_start",
+        "window_end",
+        "eligible_review_count",
+        "complaint_review_count",
+        "supporting_review_ids",
+        "rule_version",
+        "model_version",
+        "generated_at"
+      ],
+      "title": "ProductIncidentAlert",
+      "type": "object"
+    },
+    "ProductSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "comparisons": {
+          "items": {
+            "$ref": "#/$defs/MetricComparison"
+          },
+          "title": "Comparisons",
+          "type": "array"
+        },
+        "granularity": {
+          "enum": [
+            "month",
+            "quarter"
+          ],
+          "title": "Granularity",
+          "type": "string"
+        },
+        "incomplete_period_reviews": {
+          "minimum": 0,
+          "title": "Incomplete Period Reviews",
+          "type": "integer"
+        },
+        "product_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Product Id",
+          "type": "string"
+        },
+        "totals": {
+          "$ref": "#/$defs/HistoricalMetrics"
+        }
+      },
+      "required": [
+        "product_id",
+        "totals",
+        "granularity",
+        "comparisons",
+        "incomplete_period_reviews"
+      ],
+      "title": "ProductSummary",
+      "type": "object"
+    },
+    "ProductTimeline": {
+      "additionalProperties": false,
+      "properties": {
+        "context": {
+          "$ref": "#/$defs/HistoricalContext"
+        },
+        "granularity": {
+          "enum": [
+            "month",
+            "quarter"
+          ],
+          "title": "Granularity",
+          "type": "string"
+        },
+        "incomplete_period_reviews": {
+          "minimum": 0,
+          "title": "Incomplete Period Reviews",
+          "type": "integer"
+        },
+        "min_denominator": {
+          "title": "Min Denominator",
+          "type": "integer"
+        },
+        "periods": {
+          "items": {
+            "$ref": "#/$defs/TimelinePeriod"
+          },
+          "title": "Periods",
+          "type": "array"
+        },
+        "product_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Product Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.1",
+          "default": "1.1",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "context",
+        "product_id",
+        "granularity",
+        "min_denominator",
+        "incomplete_period_reviews",
+        "periods"
+      ],
+      "title": "ProductTimeline",
+      "type": "object"
+    },
+    "ReviewEvidenceResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "complaints": {
+          "items": {
+            "$ref": "#/$defs/ComplaintDetection"
+          },
+          "title": "Complaints",
+          "type": "array"
+        },
+        "context": {
+          "$ref": "#/$defs/HistoricalContext"
+        },
+        "product_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Product Id",
+          "type": "string"
+        },
+        "rating": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Rating"
+        },
+        "review_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Review Id",
+          "type": "string"
+        },
+        "reviewed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reviewed At"
+        },
+        "schema_version": {
+          "const": "1.1",
+          "default": "1.1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Text"
+        },
+        "text_state": {
+          "enum": [
+            "available",
+            "protected_family",
+            "reserved_annotation",
+            "unavailable"
+          ],
+          "title": "Text State",
+          "type": "string"
+        }
+      },
+      "required": [
+        "context",
+        "review_id",
+        "product_id",
+        "reviewed_at",
+        "rating",
+        "text_state",
+        "text",
+        "complaints"
+      ],
+      "title": "ReviewEvidenceResponse",
+      "type": "object"
+    },
+    "ReviewExcerpt": {
+      "additionalProperties": false,
+      "properties": {
+        "end": {
+          "exclusiveMinimum": 0,
+          "title": "End",
+          "type": "integer"
+        },
+        "is_model_attribution": {
+          "const": false,
+          "default": false,
+          "title": "Is Model Attribution",
+          "type": "boolean"
+        },
+        "method": {
+          "enum": [
+            "rule_match",
+            "source_excerpt"
+          ],
+          "title": "Method",
+          "type": "string"
+        },
+        "resolution": {
+          "default": "not_established",
+          "enum": [
+            "not_established",
+            "reported_resolved"
+          ],
+          "title": "Resolution",
+          "type": "string"
+        },
+        "resolution_end": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Resolution End"
+        },
+        "resolution_excerpt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Resolution Excerpt"
+        },
+        "resolution_start": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Resolution Start"
+        },
+        "review_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Review Id",
+          "type": "string"
+        },
+        "reviewed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewed At"
+        },
+        "rule_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rule Id"
+        },
+        "start": {
+          "minimum": 0,
+          "title": "Start",
+          "type": "integer"
+        },
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "review_id",
+        "start",
+        "end",
+        "text",
+        "method"
+      ],
+      "title": "ReviewExcerpt",
+      "type": "object"
+    },
+    "SentimentLabel": {
+      "enum": [
+        "positive",
+        "neutral",
+        "negative"
+      ],
+      "title": "SentimentLabel",
+      "type": "string"
+    },
+    "SentimentPrediction": {
+      "additionalProperties": false,
+      "properties": {
+        "calibration": {
+          "enum": [
+            "uncalibrated",
+            "validated_calibration"
+          ],
+          "title": "Calibration",
+          "type": "string"
+        },
+        "escalation_reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Escalation Reasons",
+          "type": "array"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/EvidenceSpan"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "label": {
+          "$ref": "#/$defs/SentimentLabel"
+        },
+        "model_version": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Model Version",
+          "type": "string"
+        },
+        "predicted_at": {
+          "format": "date-time",
+          "title": "Predicted At",
+          "type": "string"
+        },
+        "preprocessing_version": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Preprocessing Version",
+          "type": "string"
+        },
+        "probabilities": {
+          "additionalProperties": {
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "propertyNames": {
+            "$ref": "#/$defs/SentimentLabel"
+          },
+          "title": "Probabilities",
+          "type": "object"
+        },
+        "requires_human_review": {
+          "title": "Requires Human Review",
+          "type": "boolean"
+        },
+        "review_id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Review Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "review_id",
+        "model_version",
+        "preprocessing_version",
+        "predicted_at",
+        "requires_human_review",
+        "label",
+        "probabilities",
+        "calibration"
+      ],
+      "title": "SentimentPrediction",
+      "type": "object"
+    },
+    "TimelinePeriod": {
+      "additionalProperties": false,
+      "properties": {
+        "end": {
+          "format": "date-time",
+          "title": "End",
+          "type": "string"
+        },
+        "metrics": {
+          "$ref": "#/$defs/HistoricalMetrics"
+        },
+        "rating_support_sufficient": {
+          "title": "Rating Support Sufficient",
+          "type": "boolean"
+        },
+        "rule_support_sufficient": {
+          "title": "Rule Support Sufficient",
+          "type": "boolean"
+        },
+        "start": {
+          "format": "date-time",
+          "title": "Start",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end",
+        "metrics",
+        "rating_support_sufficient",
+        "rule_support_sufficient"
+      ],
+      "title": "TimelinePeriod",
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SignalDesk canonical business 1.1 and legacy experiment 1.0 contracts"
+}
