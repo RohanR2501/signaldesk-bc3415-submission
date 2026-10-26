@@ -1,6 +1,6 @@
 {
   "format_version": 1,
-  "description": "Frozen runtime files; checksums identify bytes, not redistribution permission. Historical records and reservation metadata are not distributed.",
+  "description": "Frozen runtime files delivered by pinned GitHub Release archives; checksums identify bytes, not redistribution permission.",
   "model_release": {
     "url": "https://github.com/RohanR2501/signaldesk-bc3415-submission/releases/download/runtime-models-v1/SignalDesk_Runtime_Models.zip",
     "bytes": 249289976,
@@ -79,5 +79,10 @@
       "sha256": "1677901b0243cd63e328732e6bcbf956a83dc6690a97eeed214eea7655fc3286",
       "group": "cuda"
     }
-  ]
+  ],
+  "historical_release": {
+    "url": "https://github.com/RohanR2501/signaldesk-bc3415-submission/releases/download/historical-data-v1/SignalDesk_Historical_Data.zip",
+    "bytes": 5109778,
+    "sha256": "cf9029c627e1c039b08297d7ea8e7bb6a286c4c2ca141b039150116900b52213"
+  }
 }

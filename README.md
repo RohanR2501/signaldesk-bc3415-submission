@@ -8,7 +8,7 @@ managers prioritise products, inspect original customer evidence and triage inco
 
 Developed for **NTU BC3415 Option A — Text Classification**.
 
-**[Run SignalDesk](#quick-start)** · **[Historical data requirements](#historical-dashboard-data-not-included)**
+**[Run SignalDesk](#quick-start)**
 
 ## How SignalDesk Works
 
@@ -54,38 +54,19 @@ results for follow-up. This is an illustrative workflow.
 
 ## Quick Start
 
-**The shortest route to a working SignalDesk:** install the prerequisites, run setup once, start two services, then open the local website. No retraining, API key, GitHub sign-in or manual model download is needed.
+### 1. Install prerequisites
 
-**What you can use after a public clone:**
+Use **Windows 10/11 x64** with [Python 3.13](https://www.python.org/downloads/)
+(including the `py` launcher), [Node.js 24](https://nodejs.org/en/download) and
+[Git for Windows](https://git-scm.com/downloads/win). Setup uses Windows' bundled `curl.exe`.
 
-| Feature | Available after setup? |
-|---|---|
-| **Live Review Analyzer** — single review, CSV batch, sentiment and complaint evidence | **Yes** |
-| **Executive Overview and Product Investigation Workbench** — populated historical results | **Only after an authorised handoff of four historical files** |
+For the default **weighted DistilBERT** model, use a compatible NVIDIA GPU and driver.
+The reference machine has an RTX 4070 Laptop GPU with 8 GB VRAM. The locked PyTorch
+wheel includes the CUDA 12.6 runtime; no separate CUDA Toolkit is needed.
 
-The historical files are not available through a public download link. See [Historical dashboard data (not included)](#historical-dashboard-data-not-included). This restriction does **not** prevent running the Live Review Analyzer.
+### 2. Clone and install the complete application
 
-### Step 1 — Install these programs (once)
-
-Use **Windows 10/11 (64-bit)** and install:
-
-1. [Python 3.13](https://www.python.org/downloads/) — ensure the Windows **Python launcher (`py`)** is installed.
-2. [Node.js 24](https://nodejs.org/en/download) — choose the **24.x** release, which includes npm.
-3. [Git for Windows](https://git-scm.com/downloads/win).
-
-Open **Windows PowerShell** (not a Python interpreter) and, optionally, confirm the versions:
-
-```powershell
-py -3.13 --version
-node --version
-git --version
-```
-
-For the **DistilBERT GPU model**, you also need a compatible NVIDIA GPU and driver (tested on an RTX 4070 Laptop GPU, 8 GB VRAM). **No NVIDIA GPU?** Use the CPU commands below instead. A separate CUDA Toolkit installation is not required.
-
-### Step 2 — Download the project and run setup (once)
-
-Copy this complete block into PowerShell:
+Open PowerShell and run:
 
 ```powershell
 git clone https://github.com/RohanR2501/signaldesk-bc3415-submission.git
@@ -93,83 +74,71 @@ cd signaldesk-bc3415-submission
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\setup.ps1
 ```
 
-**If you do not have a compatible NVIDIA GPU**, replace the *last line* with:
+Setup installs locked Python/frontend dependencies and automatically downloads **both**
+runtime bundles from this repository's public Releases:
 
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\setup.ps1 -CpuOnly
-```
+- [Saved sentiment models](https://github.com/RohanR2501/signaldesk-bc3415-submission/releases/tag/runtime-models-v1).
+- [Frozen historical analytics data](https://github.com/RohanR2501/signaldesk-bc3415-submission/releases/tag/historical-data-v1).
 
-Setup installs locked dependencies, downloads the saved model bundle from the [public model Release](https://github.com/RohanR2501/signaldesk-bc3415-submission/releases/tag/runtime-models-v1), and verifies checksums. It may take a while on the first run. Files already downloaded and verified are reused.
+Archive and extracted-file sizes/SHA256 checksums are verified before use. Valid existing
+files are preserved; downloaded archives are cached in `.runtime`. No GitHub sign-in,
+API key, manual file transfer, data reconstruction or retraining is required.
 
-**A warning saying `PARTIALLY REPRODUCIBLE` is expected on a public clone.** It means the *historical dashboards* have no data yet; it does **not** mean the Live Review Analyzer or saved models failed. Continue to Step 3 if setup finishes successfully.
+### 3. Launch SignalDesk
 
-### Step 3 — Start the application (two PowerShell windows)
-
-Keep **both windows open** while using SignalDesk. Both must be in the `signaldesk-bc3415-submission` folder (you can open that folder in File Explorer, click the address bar, type `powershell` and press Enter to start PowerShell there).
-
-**PowerShell window 1 — backend**
+From the cloned repository folder, start the backend in PowerShell window 1:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\start.ps1 Backend
 ```
 
-**CPU mode:** use this backend command instead:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\start.ps1 Backend -CpuOnly
-```
-
-**PowerShell window 2 — frontend** (same command for GPU and CPU):
+Open a second PowerShell window in the same folder and start the frontend:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\start.ps1 Frontend
 ```
 
-### Step 4 — Open SignalDesk and check it works
+Open **[http://127.0.0.1:5173](http://127.0.0.1:5173)**. Keep both service windows open;
+errors remain visible in their terminals. To stop SignalDesk, press **Ctrl+C in each
+window**. Stop services before rerunning setup.
+API documentation: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
 
-Open **http://127.0.0.1:5173/** in a browser *on that same computer*. The backend API documentation is available at **http://127.0.0.1:8000/docs**.
-
-1. In the sidebar, select **Live Review Analyzer**.
-2. Choose **Single Review**, paste `The coffee maker arrived broken and does not turn on.` and run the analysis.
-3. Confirm that a sentiment prediction and complaint evidence (when the rules match) appear. The displayed model indicates whether the GPU DistilBERT or CPU Logistic Regression path ran.
-4. Optionally, select **Batch CSV Analysis** and upload a UTF-8 `.csv` file with a `text` header (up to 100 reviews / 2 MiB); the results can be filtered and exported.
-
-The first **GPU** prediction may take several minutes while DistilBERT loads; later requests reuse the loaded model. The CPU fallback is a different trained classifier, so its sentiment outputs may differ. To stop the application, press **Ctrl+C** in each service's PowerShell window.
-
-### Historical dashboard data (not included)
-
-**To reproduce the populated historical views exactly as shown in the demonstration, four additional prepared files are required.** They are **not** included in the GitHub repository or model Release and there is currently **no public download link** for them. This is because redistribution permissions for Amazon review-containing material are unresolved.
-
-An authorised handoff must provide these **matching** files, preserving their relative paths under the cloned repository:
-
-```text
-data/processed/appliances-v1/investigation.parquet
-data/processed/appliances-v1/manifest.json
-data/annotations/sentiment-v1/internal/provenance.json
-data/annotations/sentiment-v1/complaints-v1/internal/provenance.json
-```
-
-Their required sizes and SHA-256 checksums are listed in the [runtime artifact inventory](config/runtime-artifacts.json). After placing authorised copies at those exact paths, verify them:
+**CPU-only alternative:** use `setup.ps1 -CpuOnly` after cloning, then add `-CpuOnly`
+to backend startup. The frontend command is unchanged:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\setup.ps1 -VerifyOnly
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\setup.ps1 -CpuOnly
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\start.ps1 Backend -CpuOnly
 ```
 
-For a CPU-only installation, use `-VerifyOnly -CpuOnly` instead. Restart the backend afterwards if it was already running.
+CPU mode retains all historical views and uses saved balanced Logistic Regression for
+sentiment. It is a different classifier and can produce different predictions.
+Initial CUDA model loading may take several minutes; subsequent requests reuse it.
 
-**Where to refer for the original data:** [Amazon Reviews 2023 — official project](https://amazon-reviews-2023.github.io/), [Appliances dataset on Hugging Face](https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023), and the [maintainers' clarification about data rights](https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/discussions/1). These links provide source-data documentation, **not** the four processed runtime files. Downloading the raw dataset alone will not restore the frozen historical dashboard; standalone reconstruction from the public source has not been verified. For access to the exact historical snapshot, contact the project author through the course's existing submission channel to discuss an authorised handoff.
+### 4. Check the three views
 
-### If something goes wrong
+1. **Executive Overview:** inspect **22,838 historical reviews across 80 products**.
+2. **Product Investigation Workbench:** explore **38 historical candidates**, compare
+   reporting periods and open original supporting customer reviews.
+3. **Live Review Analyzer:** choose **Single Review**, paste
+   `The coffee maker arrived broken and does not turn on.` and select **Analyse review**.
+   The result shows the actual sentiment model and independent complaint evidence.
+   **Batch CSV Analysis** accepts UTF-8 CSV with a `text` header, up to **100 reviews / 2 MiB**.
 
-| Symptom | What to do |
-|---|---|
-| `py`, `node` or `git` not recognised | Install the linked prerequisite, reopen PowerShell and retry Step 1. |
-| Setup reports missing historical files | Expected on a public clone; proceed to the **Live Review Analyzer**. See the historical-data section only if full dashboards are needed. |
-| GPU unavailable or CUDA error | Repeat setup with `-CpuOnly`, then start the backend with `-CpuOnly`. |
-| First prediction appears to stall | Allow time for initial GPU model loading; subsequent predictions should be faster. |
-| Port `8000` or `5173` in use | Stop the already-running SignalDesk service with Ctrl+C in its own terminal, or use that existing service. |
-| Model download/checksum failure | Check network access and the [model Release](https://github.com/RohanR2501/signaldesk-bc3415-submission/releases/tag/runtime-models-v1); follow the displayed error. No manual replacement of mismatched files is performed. |
+Fresh-clone verification on **27 October 2026** covered all three views, accessible original
+evidence, saved CUDA inference and the CPU-only fallback. No data reconstruction or retraining ran.
 
+### Runtime files and optional modes
+
+The [runtime inventory](config/runtime-artifacts.json) lists all required paths, byte sizes,
+file hashes and archive download URLs. The historical bundle supplies the four original
+prepared files, including compatible exclusion/provenance metadata. No annotation CSVs,
+completed human judgments or training/test partitions are installed.
+
+`setup.ps1 -VerifyOnly` checks existing files without downloading/installing anything.
+Add `-CpuOnly` for a CPU installation. `-AnalyzerOnly` skips historical delivery and
+verification for an intentionally Analyzer-only setup. The original separate-terminal
+startup modes remain available as `start.ps1 Backend` and `start.ps1 Frontend`.
 
 ## Dataset and Machine Learning
 
@@ -252,9 +221,9 @@ product mapping and compatible provenance. This is a future integration, not a o
 
 ## Troubleshooting and Data Attribution
 
-- **Historical views unavailable:** obtain the four matching, authorised files above.
-  The model Release contains no historical data; do not run the research preparation
-  pipeline as an application-setup shortcut.
+- **Historical views unavailable:** stop services and rerun `setup.ps1` to retrieve and
+  verify the historical Release. Check that `-AnalyzerOnly` was not selected. Restart
+  the backend after correcting files; no research preparation is needed.
 - **Sentiment unavailable or fallback used:** check paths against the runtime inventory
   and inspect the displayed model/device. For CPU use, add `-CpuOnly` to setup and backend
   startup. Restart the backend after correcting artifacts or dependencies.
@@ -268,8 +237,10 @@ product mapping and compatible provenance. This is a future integration, not a o
 **Dataset:** McAuley Lab, [Amazon Reviews 2023](https://amazon-reviews-2023.github.io/). Hou et al.
 (2024), *Bridging Language and Items for Retrieval and Recommendation*. The [maintainers' usage
 clarification](https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/discussions/1) does
-not grant an unrestricted redistribution licence. Review bodies and protected annotations are
-excluded from public delivery; historical handoff requires permission.
+not assign a dataset licence. The historical Release includes the frozen source-review
+bodies and reservation metadata for reproducibility; it grants no new rights in Amazon text.
+Completed annotations and research partitions remain excluded. Applicable third-party rights
+remain unresolved.
 
 **Base model:** [distilbert-base-uncased](https://huggingface.co/distilbert/distilbert-base-uncased), Apache-2.0.
 The Release retains its licence and identifies project fine-tuning. That licence does not resolve
