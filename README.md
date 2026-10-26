@@ -214,7 +214,7 @@ batches today within the existing limits and appliance-review domain. Outputs su
 decisions; the application does not autonomously issue refunds, recalls or verified defect findings.
 
 Refreshing dashboards from company time-stamped records requires additional ingestion/preparation,
-product mapping and compatible provenance. This is a future integration, not a one-click feature.
+product mapping and compatible provenance. This can be implemented as a future integration.
 
 ## Troubleshooting and Data Attribution
 
