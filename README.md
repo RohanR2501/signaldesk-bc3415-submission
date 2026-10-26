@@ -1,20 +1,64 @@
-# SignalDesk
+# SignalDesk — AI-Powered Customer Review Intelligence
 
-SignalDesk helps retail analysts turn appliance reviews into evidence for investigation.
-It combines saved sentiment models, independent complaint rules and historical product
-analytics in three views. Developed for NTU BC3415 Option A (Text Classification).
+SignalDesk helps Customer Experience Managers, Product Quality Managers and Retail Operations
+Analysts find recurring concerns in appliance reviews. Star ratings summarise satisfaction but
+rarely explain what went wrong; reading every review individually makes patterns difficult to see.
+Trained sentiment classification, independent complaint detection and historical analytics help
+managers prioritise products, inspect original customer evidence and triage incoming feedback.
+
+Developed for **NTU BC3415 Option A — Text Classification**.
+
+**[Run SignalDesk](#quick-start)**
+
+## How SignalDesk Works
+
+### 1. Discover — Executive Overview
+
+Start with review volume, negative-rating burden and complaint patterns to identify products
+requiring attention. The historical snapshot contains **22,838 reviews across 80 products**, ending
+**11 September 2023**, with **38 investigation candidates**. Search products and open a candidate to
+understand the feedback behind its priority.
+
+### 2. Investigate — Product Investigation Workbench
+
+Examine product timelines and compare complaint proportions across supported historical periods.
+Rising signals highlight increases; sustained signals highlight repeated burden across two periods.
+Check supporting counts, denominators and original excerpts before escalating a customer-reported
+concern. Candidates support human investigation; they do not establish defects.
+
+Negative-rating shares use rated reviews; complaint shares use scanned bodies, with minimum support.
+
+### 3. Analyse — Live Review Analyzer
+
+Paste an individual review or upload a UTF-8 CSV with a required `text` column and an optional
+`review_id` column. Batches support **up to 100 reviews / 2 MiB** and process each review through
+the same saved sentiment model and independent rules, sequentially. Inspect exact complaint excerpts
+and export a spreadsheet-safe CSV. **Other / Uncategorised Feedback** flags
+negative sentiment where all five complaint scans completed without matching evidence, prompting
+manual review.
+
+```mermaid
+flowchart LR
+    H[Historical review snapshot] --> O[Discover: Executive Overview]
+    O --> W[Investigate: Product Investigation Workbench]
+    N[New review or CSV] --> A[Analyse: Live Review Analyzer]
+    A --> E[Review results and export CSV]
+```
+
+**Historical analysis and incoming-review analysis are separate processing paths.** CSV uploads do
+not update the historical dashboard or create investigation candidates.
+
+For example, a manager can inspect a historical arrival-damage candidate, compare its reporting
+periods and read the evidence, then separately analyse a new customer-service CSV and export
+results for follow-up. This is an illustrative workflow.
 
 ## Quick Start
 
-### 1. Prerequisites and clone
-
-Use **Windows 10/11 x64, Python 3.13 (with the `py` launcher), Node.js 24 and Git**.
-Setup uses the `curl.exe` included with current Windows installations.
-The default setup preserves **weighted DistilBERT on NVIDIA CUDA**; the reference
-hardware is an RTX 4070 Laptop GPU with 8 GB VRAM and a compatible NVIDIA driver.
-The locked PyTorch wheel includes CUDA 12.6 runtime support; a separate CUDA Toolkit
-is not required. Setup installs pinned **uv 0.13.5** in a separate `.tools` environment.
-GitHub CLI and a GitHub account are not required for the public repository or model download.
+- **Windows 10/11 x64**, **Python 3.13** with the `py` launcher, **Node.js 24** and **Git**.
+  Setup also uses the `curl.exe` included with current Windows installations.
+- For weighted DistilBERT, use a compatible **NVIDIA GPU and driver**. The verified
+  reference is an **RTX 4070 Laptop GPU with 8 GB VRAM**. The locked PyTorch wheel
+  includes the CUDA 12.6 runtime; a separate CUDA Toolkit is not required.
 
 ```powershell
 git clone https://github.com/RohanR2501/signaldesk-bc3415-submission.git
@@ -22,184 +66,155 @@ cd signaldesk-bc3415-submission
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\setup.ps1
 ```
 
-### 2. Runtime availability
+Setup installs pinned **uv 0.13.5** in `.tools`, uses `uv.lock` and `frontend/package-lock.json`,
+and downloads saved models from the public [runtime-models-v1
+Release](https://github.com/RohanR2501/signaldesk-bc3415-submission/releases/tag/runtime-models-v1).
+It verifies archive/model checksums, reuses valid files and stops on conflicting files. No GitHub
+account, retraining or manual model extraction is required.
 
-Setup downloads the existing public [runtime-models-v1 Release](https://github.com/RohanR2501/signaldesk-bc3415-submission/releases/tag/runtime-models-v1)
-when required models are missing, verifies the pinned archive SHA256 and each saved
-model, and installs missing files with licence notices. Valid existing files are reused;
-conflicting files stop setup without replacement. The 238 MiB archive is cached in
-`.runtime` for interrupted installations; subsequent complete installations do not download it.
-No training, model conversion or dataset preparation runs during setup.
+**A public clone supports the Live Review Analyzer, including CSV batches.** The populated Executive
+Overview and Workbench additionally require four separately authorised historical files. Setup
+reports partial readiness when these are absent. Exact paths, sizes and checksums are in the
+[runtime inventory](config/runtime-artifacts.json):
 
-**PARTIALLY REPRODUCIBLE from a public clone.** Single-review and batch CSV analysis
-use the saved real models and independent complaint-rules-v2. The populated Executive
-Overview and Product Investigation Workbench require four historical files that are
-not publicly distributed. Setup reports this limitation and installs Analyzer dependencies;
-it does not claim the complete historical application is ready.
+```text
+data/processed/appliances-v1/investigation.parquet
+data/processed/appliances-v1/manifest.json
+data/annotations/sentiment-v1/internal/provenance.json
+data/annotations/sentiment-v1/complaints-v1/internal/provenance.json
+```
 
-| Capability | Required paths relative to the repository root | Total size |
-|---|---|---:|
-| CPU fallback | `artifacts/sentiment/baselines-v1/{run.json,logistic_regression_balanced.joblib}` | 2.00 MiB |
-| CUDA sentiment | `artifacts/sentiment/distilbert-weighted-v1/run.json` and `checkpoint/{class_mapping.json,config.json,model.safetensors,tokenizer.json,tokenizer_config.json}` | 256.12 MiB |
-| Historical views | `data/processed/appliances-v1/{investigation.parquet,manifest.json}` plus the two exclusion metadata files below | 4.91 MiB |
+After an authorised handoff, copy the matching files into place and verify them without downloads:
 
-The exclusion files are `data/annotations/sentiment-v1/internal/provenance.json` and
-`data/annotations/sentiment-v1/complaints-v1/internal/provenance.json`. They contain
-frozen reservation metadata, not completed annotation CSVs. All **12 runtime paths,
-byte sizes and SHA256 checksums**, plus the public model archive checksum, are in
-[config/runtime-artifacts.json](config/runtime-artifacts.json).
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\setup.ps1 -VerifyOnly
+```
 
-### 3. Historical reproduction boundary
+### Start the application
 
-The [official provider](https://amazon-reviews-2023.github.io/) still offers the Appliances
-source (270,209,794 compressed bytes, checked by HEAD only). Existing preparation uses
-seed 3415 and deterministic product selection, but is a research pipeline: it scans the
-full category, constructs the 50,000-row reservoir and duplicate families, writes all
-sentiment partitions, and verifies the sealed test. **Do not run it for application setup.**
-The frozen history also depends on those family assignments and the main/optional
-annotation reservations. Acquisition/manifest timestamps change output hashes, and
-reservation generation depends on earlier research files and rules; the current code
-is not a standalone restorer of the four original runtime files. No exact reconstruction
-from a fresh download was executed or verified. No source reviews were downloaded or
-reprocessed during this deployment audit.
-
-Amazon review redistribution permission remains unresolved: the
-[maintainers do not assign a dataset licence](https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/discussions/1).
-For the same **22,838 reviews, 80 products and 38 investigation candidates**, use the
-original project computer. If an authorised private handoff is established, copy only
-the four matching historical files to the paths above, then run `setup.ps1 -VerifyOnly`.
-Do not publish review bodies, protected annotations or research partitions. This handoff
-requires permission; it is not supplied by the model Release or implied by public access.
-
-`setup.ps1 -VerifyOnly` checks all required artifacts without installing or downloading;
-missing historical files fail that check. Add `-AnalyzerOnly` to verify/install only the
-Analyzer artifacts. Normal setup checks any present historical files and stops on a
-checksum mismatch. Existing configuration is preserved; defaults need no `.env` files.
-
-### 4. Start the application
-
-In terminal 1, from the repository root:
+From the repository root, start the backend in terminal 1:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\start.ps1 Backend
 ```
 
-In terminal 2, from the same directory:
+Start the frontend in terminal 2:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\start.ps1 Frontend
 ```
 
-Open **[http://127.0.0.1:5173](http://127.0.0.1:5173)**.
-API documentation: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
-Stop each foreground service with **Ctrl+C**. Stop the services before rerunning setup;
-Windows can lock frontend dependencies while Vite is running. The helpers refuse occupied
-ports and never terminate existing services.
+Open **[SignalDesk](http://127.0.0.1:5173)**; [API docs](http://127.0.0.1:8000/docs).
+Stop services with **Ctrl+C** before rerunning setup.
 
-**Without compatible CUDA hardware:** add `-CpuOnly` to setup and backend startup.
-This omits GPU dependencies; the existing backend automatically falls back to saved
-balanced logistic regression. It does not run DistilBERT on CPU or change model selection.
-First model initialisation can take several minutes (206 seconds in the fresh-clone
-check); subsequent requests reuse the loaded model. Missing sentiment artifacts produce explicit
-partial/unavailable results; missing historical files produce unavailable historical views.
+**Without compatible CUDA:** append `-CpuOnly` to both setup and backend startup. This uses saved
+balanced Logistic Regression, a different classifier that can produce different predictions.
+DistilBERT remains the default on compatible CUDA hardware. Initial CUDA loading can take several
+minutes; later requests reuse the loaded model.
 
-Verified on **26 October 2026**, Windows / Python 3.13 / Node.js 24: a temporary public
-clone downloaded the Release anonymously, passed archive/model checksums, installed
-74 locked Python packages and 199 frontend packages, and started both helpers on
-ports 8000/5173. The released weighted model produced genuine `cuda:0` inference;
-disabling CUDA in a separate process used saved balanced LR. Repeated setup with
-services stopped reused all eight model files and the archive without changing bytes
-or timestamps. `-VerifyOnly`, missing-file and tamper/no-overwrite checks passed.
-Fresh history returned unavailable (503); the original local files separately reproduced
-22,838 reviews / 80 products / 38 candidates and 182 exact evidence excerpts. No dataset
-rebuild, training, frozen evaluation or large validation suite was run.
+Saved-model setup, both startup helpers, CUDA inference and CPU fallback were verified from a
+fresh clone on the reference Windows computer. Historical views still require a separate handoff.
 
-## Application Features
+## Dataset and Machine Learning
 
-- **Executive Overview:** historical volume, negative-rating burden, complaint scan
-  coverage, product search and investigation priorities.
-- **Live Review Analyzer:** single-review or UTF-8 CSV analysis (`text` required,
-  `review_id` optional), up to **100 reviews / 2 MiB**, processed sequentially. Includes
-  actual model identity, five independent complaint results, exact excerpts, cancellation,
-  filters and spreadsheet-safe CSV export. Original text stays in temporary browser memory.
-  Other / Uncategorised Feedback flags successful negative sentiment with five completed
-  scans and no complaint evidence; it is a manual-review hint, not a sixth category.
-- **Product Investigation Workbench:** product and candidate filters, pagination,
-  monthly/quarterly comparisons and original source evidence. The frozen history contains
-  **22,838 reviews, 80 products and 38 candidates**, ending **11 September 2023**.
-  Version 2 rules match 1,491 unique reviews among 20,282 scanned bodies.
+The project uses the **Appliances** category of McAuley Lab's **Amazon Reviews 2023**. Sentiment
+targets are rating-derived: **1–2 stars negative, 3 neutral, 4–5 positive**. Only original
+review-body `model_text` enters classifiers; ratings, IDs, timestamps and other metadata are
+excluded from sentiment features.
 
-## Machine Learning
+Preprocessing validates text, ratings and UTC timestamps, removes reviewer identities and images,
+and groups exact and defined near-duplicate text families before selecting one representative per
+sentiment family. Chronological splitting approximates prediction on later reviews while preventing
+detected duplicate families from crossing partitions. TF-IDF vocabulary/IDF and class weights are
+fitted using training data only.
 
-Preprocessing validates text, ratings and UTC timestamps, removes reviewer identities
-and images, and keeps duplicate text families together in chronological partitions.
-Only review-body `model_text` enters sentiment classifiers. Training labels are rating
-proxies: **1–2 stars negative, 3 neutral, 4–5 positive**.
+Naive Bayes provides a simple TF-IDF baseline. Logistic Regression learns discriminative word/phrase
+weights, with a balanced variant giving minority classes more influence. Two DistilBERT models
+fine-tune the same pretrained encoder for two epochs, comparing unweighted loss with training-only
+square-root inverse-frequency class weighting.
 
-Classical baselines compare majority, TF-IDF Naive Bayes, logistic regression and balanced
-logistic regression. Two two-epoch fine-tuned DistilBERT runs compare unweighted loss
-with training-only square-root inverse-frequency weighting. **Weighted DistilBERT** is
-the provisional GPU model; **balanced LR** is the saved CPU fallback. Macro-F1 gives
-each sentiment class equal weight during selection.
+All models below use the same **6,673 rating-proxy validation reviews**, after reserving 240
+annotation records. **Macro-F1** weights the three classes equally during selection, so the large
+positive class cannot dominate the overall comparison.
 
 | Model | Validation accuracy | Macro-F1 |
 |---|---:|---:|
-| Balanced Logistic Regression | 82.65% | 0.6269 |
+| Majority class | 76.19% | 0.2883 |
+| TF-IDF + Naive Bayes | 78.30% | 0.3569 |
+| TF-IDF + Logistic Regression | 87.53% | 0.5680 |
+| TF-IDF + balanced Logistic Regression | 82.65% | 0.6269 |
 | Unweighted DistilBERT | 89.84% | 0.6669 |
-| Weighted DistilBERT | 87.97% | 0.6756 |
+| **Weighted DistilBERT — default CUDA model** | **87.97%** | **0.6756** |
 
-These frozen comparisons use **6,673 rating-proxy validation reviews** after excluding
-240 reserved annotation records. The **6,921-review test set remains sealed**. Separate
-LLM-reference comparisons and 20 selected human judgments are descriptive, not estimates
-of population accuracy. Evaluation is closed; setup runs no training or evaluation.
+Weighted DistilBERT achieved the highest validation Macro-F1 and remains the provisional GPU model.
+Its advantage over unweighted DistilBERT is modest (**0.0087 Macro-F1**), with lower overall
+accuracy. Balanced Logistic Regression is the saved CPU fallback. These scores measure rating-proxy
+agreement, not independently verified sentiment accuracy. The 6,921-review test set remains sealed.
+Separate LLM-generated references and 20 deliberately selected human judgments do not establish
+population-level performance.
 
-`complaint-rules-v2` independently detects **product defect, arrival damage, wrong item,
-delivery issue and service/returns**. It preserves exact Unicode offsets, negation and
-reported-resolution context. Positive sentiment never erases complaint evidence. No match
-means unknown, not confirmed absence; v2 coverage is not independently validated and
-frozen v1 comparisons do not validate v2. Historical candidates are not verified incidents.
+## Technical Architecture
 
-## Technical Details
+The **React / strict TypeScript** frontend calls one **FastAPI** backend through `/api/v1`. Saved
+sentiment models load locally on demand and are reused. Separate modules handle preparation, offline
+training/evaluation and runtime inference. [Canonical Python
+contracts](backend/src/signaldesk/contracts.py) define API schemas and generate shared TypeScript
+types.
 
-React/strict TypeScript/Tailwind calls one FastAPI backend through `/api/v1`. Saved models
-load lazily and are reused; historical intelligence uses a cached Polars snapshot with
-traceable denominators and minimum-support rules. No Docker, hosted inference or paid API
-is needed. Runtime artifacts remain outside ordinary Git history.
+Independent **complaint-rules-v2** scans five categories: **product defect, arrival damage, wrong
+item, delivery issue and service/returns**. It preserves exact original-text offsets, handles
+negation and records reported resolutions. Positive sentiment can coexist with complaint evidence;
+no matching rule means unknown. Rule coverage is not an independently validated defect-detection
+rate.
+
+Historical time-series analytics use a cached **Polars** snapshot, calendar comparisons, explicit
+denominators and minimum-support rules to prioritise reading. Historical negative-rating burden
+comes from ratings, independently of live sentiment inference. Core predictions require no external
+LLM service or paid inference API.
 
 ```text
-backend/src/signaldesk/   API, inference orchestration and historical intelligence
-frontend/src/            Three views, typed client, batch processing and evidence UI
-ml/signaldesk_data/      Acquisition, preprocessing and duplicate-aware partitions
-ml/signaldesk_ml/        Training, model selection, inference and evaluation
-config/                  Frozen experiment settings and runtime checksum inventory
-docs/                    Canonical API schema and frozen complaint taxonomy
-scripts/                 Model-cache, GPU and contract-export utilities
-tests/; frontend/tests/  Focused backend and CSV/triage tests
-setup.ps1; start.ps1     Native Windows setup and foreground service startup
+backend/src/signaldesk/   FastAPI, inference orchestration and historical analytics
+frontend/src/            Three views, typed client and CSV workflow
+ml/signaldesk_data/      Acquisition, validation, deduplication and partitions
+ml/signaldesk_ml/        Sentiment experiments, evaluation, inference and complaint rules
+config/                  Experiment configuration and runtime artifact inventory
+docs/                    API schema and complaint taxonomy
+scripts/                 Model-cache, GPU-check and contract-export utilities
+tests/; frontend/tests/  Focused backend and CSV-processing tests
+setup.ps1; start.ps1     Windows installation and foreground service helpers
 ```
 
-[Canonical contracts](backend/src/signaldesk/contracts.py) generate the shared API schemas.
-Offline research code is retained for grading; reproducing experiments requires authorised
-source data and frozen memberships, not application setup. Source alone cannot recreate
-private judgments or guarantee identical models.
+## Business Value and Future Integration
 
-Data: McAuley Lab, [Amazon Reviews 2023](https://amazon-reviews-2023.github.io/),
-Hou et al. (2024), *Bridging Language and Items for Retrieval and Recommendation*.
-The [DistilBERT base model](https://huggingface.co/distilbert/distilbert-base-uncased)
-is Apache-2.0 licensed; the model bundle retains its licence and identifies our fine-tuning.
-Saved LR parameters/vocabulary and run metadata are project-created; no original review
-bodies or annotation files are included in that bundle. Upstream model licensing does
-not establish permission to redistribute Amazon reviews or settle rights in models trained
-on them; downstream dataset terms remain an unresolved licensing concern. The Release
-contains no review bodies or annotation judgments. Only load trusted joblib files.
+SignalDesk supports incoming-review triage, prioritises recurring product concerns and provides
+traceable evidence for investigation and escalation. Companies can analyse their own reviews and CSV
+batches today within the existing limits and appliance-review domain. Outputs support human
+decisions; the application does not autonomously issue refunds, recalls or verified defect findings.
 
-## Troubleshooting
+Refreshing dashboards from company time-stamped records requires additional ingestion/preparation,
+product mapping and compatible provenance. This is a future integration, not a one-click feature.
 
-| Problem | Action |
-|---|---|
-| Public model download fails | Check GitHub/network access and retry; no login is required. Inspect any reported cache mismatch before removing that cached archive. |
-| Artifact checksum mismatch | Restore the matching frozen file from a trusted source; setup refuses to overwrite it. Historical files require an authorised handoff. |
-| Port 8000 or 5173 occupied | Use the existing service or stop it in its own terminal, then retry. |
-| Sentiment unavailable | Check model paths/dependencies; restart backend after correcting them because load failures are cached. `.env.example` lists path overrides. |
-| Historical views unavailable | The four historical files are missing, incompatible or failed integrity checks; the model bundle does not contain them. |
-| Health is connected but analysis is unavailable | Health checks liveness, not model/data readiness. Inspect the analysis response. |
+## Troubleshooting and Data Attribution
+
+- **Historical views unavailable:** obtain the four matching, authorised files above.
+  The model Release contains no historical data; do not run the research preparation
+  pipeline as an application-setup shortcut.
+- **Sentiment unavailable or fallback used:** check paths against the runtime inventory
+  and inspect the displayed model/device. For CPU use, add `-CpuOnly` to setup and backend
+  startup. Restart the backend after correcting artifacts or dependencies.
+- **Slow first analysis:** allow several minutes for initial CUDA loading. A connected
+  health status confirms API liveness, not completed model initialization.
+- **Port 8000 or 5173 occupied:** use the existing service or stop it in its own terminal.
+  Startup helpers do not terminate processes. Stop the frontend before rerunning setup.
+- **Download or checksum failure:** check GitHub/network access and the reported path.
+  Restore the trusted matching file; setup refuses to overwrite conflicting files.
+
+**Dataset:** McAuley Lab, [Amazon Reviews 2023](https://amazon-reviews-2023.github.io/). Hou et al.
+(2024), *Bridging Language and Items for Retrieval and Recommendation*. The [maintainers' usage
+clarification](https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/discussions/1) does
+not grant an unrestricted redistribution licence. Review bodies and protected annotations are
+excluded from public delivery; historical handoff requires permission.
+
+**Base model:** [distilbert-base-uncased](https://huggingface.co/distilbert/distilbert-base-uncased), Apache-2.0.
+The Release retains its licence and identifies project fine-tuning. That licence does not resolve
+Amazon dataset or downstream training-data rights. Only load trusted joblib files.
