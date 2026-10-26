@@ -6,7 +6,7 @@ rarely explain what went wrong; reading every review individually makes patterns
 Trained sentiment classification, independent complaint detection and historical analytics help
 managers prioritise products, inspect original customer evidence and triage incoming feedback.
 
-Developed for **NTU BC3415 Option A — Text Classification**.
+Developed for **NTU BC3415 Option A (Text Classification)**.
 
 **[Run SignalDesk](#quick-start)**
 
