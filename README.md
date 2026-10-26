@@ -1,4 +1,4 @@
-# SignalDesk — AI-Powered Customer Review Intelligence
+# SignalDesk: AI-Powered Customer Review Intelligence
 
 SignalDesk helps Customer Experience Managers, Product Quality Managers and Retail Operations
 Analysts find recurring concerns in appliance reviews. Star ratings summarise satisfaction but
