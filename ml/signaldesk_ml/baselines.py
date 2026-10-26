@@ -176,6 +176,7 @@ def prepare_annotations(
 
 
 def make_pipeline(name: str, config: dict[str, Any]) -> Any:
+    # Keeping TF-IDF inside the pipeline fits vocabulary/IDF on training text only.
     if name == "majority":
         return Pipeline([("classifier", DummyClassifier(strategy="most_frequent"))])
     settings = {**config["tfidf"], "ngram_range": tuple(config["tfidf"]["ngram_range"])}
@@ -194,6 +195,8 @@ def make_pipeline(name: str, config: dict[str, Any]) -> Any:
 
 
 def metrics(truth: list[str], predictions: list[str]) -> dict[str, Any]:
+    # Selection uses Macro-F1 so the large positive class cannot dominate the average.
+    # Proxy-label agreement measures reproduction of ratings, not verified sentiment accuracy.
     precision, recall, f1, support = precision_recall_fscore_support(
         truth, predictions, labels=LABELS, zero_division=0
     )

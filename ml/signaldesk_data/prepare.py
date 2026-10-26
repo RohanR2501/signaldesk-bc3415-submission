@@ -203,6 +203,8 @@ def select_products(products: dict[str, list[Any]], config: dict[str, Any]) -> l
 def chronological_partitions(
     rows: list[dict[str, Any]], config: dict[str, Any]
 ) -> tuple[dict[str, str], list[str]]:
+    # Later reviews approximate future use; UTC-day cutoffs avoid splitting one day.
+    # Inputs already contain one representative per duplicate family to prevent leakage.
     ordered = sorted(rows, key=lambda row: (row["reviewed_at"], row["review_id"]))
     cut_days = [
         ordered[min(len(ordered) - 1, int(len(ordered) * fraction))]["reviewed_at"].replace(
@@ -374,6 +376,7 @@ def prepare(config_path: Path) -> dict[str, Any]:
                 investigation.append(clean)
     if len(investigation) != sum(product_stats[key][0] for key in selected):
         raise ValueError("Investigation histories are incomplete")
+    # Group both cohorts together so shared/near-duplicate histories inherit protection.
     union = {row["review_id"]: row for row in [*sample, *investigation]}
     print(f"Checking duplicate families across {len(union):,} cohort-union records...", flush=True)
     groups, duplicate_audit = duplicate_groups(list(union.values()), config)
@@ -381,6 +384,7 @@ def prepare(config_path: Path) -> dict[str, Any]:
     for row in sample:
         row["duplicate_group_id"] = groups[row["review_id"]]
         group = row["duplicate_group_id"]
+        # Choose a representative without consulting its rating-derived target.
         rank = hashlib.sha256(f"{config['seed']}:{row['review_id']}".encode()).digest()
         if (
             group not in representatives

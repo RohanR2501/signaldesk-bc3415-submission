@@ -1,6 +1,11 @@
 {
   "format_version": 1,
   "description": "Frozen runtime files; checksums identify bytes, not redistribution permission. Historical records and reservation metadata are not distributed.",
+  "model_release": {
+    "url": "https://github.com/RohanR2501/signaldesk-bc3415-submission/releases/download/runtime-models-v1/SignalDesk_Runtime_Models.zip",
+    "bytes": 249289976,
+    "sha256": "6e959feb8b2dfd5f357ea072fdce67785034977ba403abaa5c7c52caea316d80"
+  },
   "files": [
     {
       "path": "data/processed/appliances-v1/investigation.parquet",

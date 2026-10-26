@@ -109,6 +109,8 @@ def timestamp_utc(value: Any) -> tuple[datetime | None, str]:
 
 
 def weak_label(rating: float) -> str:
+    # Ratings provide weak supervision for sentiment, not independent human judgments.
+    # They create targets only; the classifiers receive review-body text as input.
     return "negative" if rating <= 2 else "neutral" if rating == 3 else "positive"
 
 

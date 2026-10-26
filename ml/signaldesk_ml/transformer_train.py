@@ -52,6 +52,8 @@ def seed_everything(seed: int) -> None:
 
 def training_class_weights(targets: list[int]) -> dict[str, Any]:
     """Square-root inverse frequency, E_training[weight] = 1; canonical label order."""
+    # Temper inverse-frequency weighting to limit minority-class amplification.
+    # Training-only frequencies keep validation labels out of the loss definition.
     if not targets or any(target not in range(len(LABELS)) for target in targets):
         raise ValueError("Training targets must use the canonical three-class mapping")
     counts = np.bincount(targets, minlength=len(LABELS))
@@ -367,6 +369,8 @@ def train(config: dict[str, Any]) -> dict[str, Any]:
     maximum = profile["max_length"]
     if reference is not None and (maximum != 256 or profile != reference["length_profile"]):
         raise ValueError("Original training-only token-length profile changed")
+    # Start both comparisons from the same pretrained encoder and seeded new head;
+    # this isolates class weighting from a different fine-tuning starting point.
     model: Any = AutoModelForSequenceClassification.from_pretrained(
         pretrained["path"],
         local_files_only=True,
