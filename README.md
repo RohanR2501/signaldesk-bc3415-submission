@@ -137,8 +137,7 @@ completed human judgments or training/test partitions are installed.
 
 `setup.ps1 -VerifyOnly` checks existing files without downloading/installing anything.
 Add `-CpuOnly` for a CPU installation. `-AnalyzerOnly` skips historical delivery and
-verification for an intentionally Analyzer-only setup. The original separate-terminal
-startup modes remain available as `start.ps1 Backend` and `start.ps1 Frontend`.
+verification for an intentionally Analyzer-only setup.
 
 ## Dataset and Machine Learning
 
