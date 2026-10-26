@@ -125,8 +125,6 @@ Initial CUDA model loading may take several minutes; subsequent requests reuse i
    The result shows the actual sentiment model and independent complaint evidence.
    **Batch CSV Analysis** accepts UTF-8 CSV with a `text` header, up to **100 reviews / 2 MiB**.
 
-Fresh-clone verification on **27 October 2026** covered all three views, accessible original
-evidence, saved CUDA inference and the CPU-only fallback. No data reconstruction or retraining ran.
 
 ### Runtime files and optional modes
 
